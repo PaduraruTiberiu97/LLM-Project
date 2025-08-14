@@ -1,0 +1,145 @@
+[
+  {
+    "id": "1984",
+    "title": "1984",
+    "themes": [
+      "totalitarianism",
+      "surveillance",
+      "freedom",
+      "truth"
+    ],
+    "summary_short": "A surveillance state crushes dissent; Winston seeks truth and love.",
+    "summary_full": "George Orwell's '1984' depicts a dystopian society ruled by the Party under Big Brother. Through Winston Smith's small acts of rebellion—keeping a diary, falling in love—the novel explores manipulation of truth, language, and memory. The Thought Police, Newspeak, and the Two Minutes Hate show how fear and propaganda sustain power. Winston's ultimate betrayal and re-education reveal a world where truth is malleable and freedom is an illusion."
+  },
+  {
+    "id": "the-hobbit",
+    "title": "The Hobbit",
+    "themes": [
+      "friendship",
+      "adventure",
+      "courage",
+      "fantasy"
+    ],
+    "summary_short": "A shy hobbit joins a quest and discovers courage against a dragon.",
+    "summary_full": "J.R.R. Tolkien's 'The Hobbit' follows Bilbo Baggins as he is swept into an expedition with thirteen dwarves and the wizard Gandalf to reclaim the Lonely Mountain from Smaug. Along the way, Bilbo outwits trolls, meets elves, wins a riddle game with Gollum, and discovers the One Ring. The journey transforms him from homebound hobbit to resourceful hero, highlighting themes of bravery, friendship, and the cost of greed."
+  },
+  {
+    "id": "pride-and-prejudice",
+    "title": "Pride and Prejudice",
+    "themes": [
+      "love",
+      "class",
+      "family",
+      "reputation"
+    ],
+    "summary_short": "Elizabeth Bennet and Mr. Darcy overcome pride, prejudice, and social expectations.",
+    "summary_full": "Jane Austen's classic novel centers on the lively Elizabeth Bennet and the reserved Mr. Darcy. Through misunderstandings, cutting wit, and changing circumstances, each confronts personal flaws—Elizabeth's quick judgments and Darcy's haughty reserve. The novel critiques class hierarchies and gender roles while celebrating mutual respect, growth, and enduring love."
+  },
+  {
+    "id": "dune",
+    "title": "Dune",
+    "themes": [
+      "destiny",
+      "ecology",
+      "power",
+      "religion"
+    ],
+    "summary_short": "On desert planet Arrakis, Paul Atreides confronts empire, prophecy, and survival.",
+    "summary_full": "Frank Herbert's 'Dune' follows Paul Atreides as his family takes stewardship of Arrakis, the only source of the spice melange. Betrayal scatters Paul among the Fremen, where he learns their ways and rises as a messianic leader. The story blends ecology, politics, economics, and religion, examining how myth and power shape civilizations and individuals alike."
+  },
+  {
+    "id": "catcher-in-the-rye",
+    "title": "The Catcher in the Rye",
+    "themes": [
+      "adolescence",
+      "alienation",
+      "identity"
+    ],
+    "summary_short": "Holden Caulfield wanders New York, railing against 'phoniness' and seeking connection.",
+    "summary_full": "J.D. Salinger's novel chronicles a few days in the life of Holden Caulfield after he leaves prep school. Narrated in a distinctive voice, Holden's encounters reveal his vulnerability, grief, and yearning to protect innocence—symbolized by his 'catcher in the rye' fantasy. The book captures teenage confusion and the difficult passage into adulthood."
+  },
+  {
+    "id": "the-great-gatsby",
+    "title": "The Great Gatsby",
+    "themes": [
+      "wealth",
+      "illusion",
+      "love",
+      "american-dream"
+    ],
+    "summary_short": "Gatsby's lavish parties hide a yearning for Daisy and an unreachable dream.",
+    "summary_full": "F. Scott Fitzgerald's Jazz Age novel portrays Jay Gatsby's obsessive love for Daisy Buchanan and the hollowness behind glittering wealth. Narrator Nick Carraway observes moral decay, class divisions, and the seduction of spectacle. Gatsby's tragic fall exposes the fragility of the American Dream when built on illusion and desire."
+  },
+  {
+    "id": "to-kill-a-mockingbird",
+    "title": "To Kill a Mockingbird",
+    "themes": [
+      "justice",
+      "race",
+      "empathy",
+      "childhood"
+    ],
+    "summary_short": "In the segregated South, a girl learns empathy as her father defends an innocent man.",
+    "summary_full": "Harper Lee's novel follows Scout Finch in Maycomb, Alabama, as her father, Atticus, defends Tom Robinson, a Black man falsely accused of assault. Through Scout's eyes, the story explores racial injustice, courage, and the importance of understanding others by 'walking in their shoes.'"
+  },
+  {
+    "id": "the-road",
+    "title": "The Road",
+    "themes": [
+      "survival",
+      "parenthood",
+      "hope",
+      "apocalypse"
+    ],
+    "summary_short": "A father and son trek through ash and ruin, clinging to a fragile light.",
+    "summary_full": "Cormac McCarthy's stark, poetic novel follows a father and son's journey across a devastated landscape. Facing scarcity and brutality, they navigate moral choices while 'carrying the fire'—an idea of goodness. The minimalist style intensifies themes of love, hope, and ethical resolve amid collapse."
+  },
+  {
+    "id": "the-alchemist",
+    "title": "The Alchemist",
+    "themes": [
+      "destiny",
+      "self-discovery",
+      "faith",
+      "journey"
+    ],
+    "summary_short": "A shepherd pursues his Personal Legend across deserts and doubts.",
+    "summary_full": "Paulo Coelho's fable traces Santiago's pursuit of a treasure he dreams of, guided by omens and mentors like the mysterious alchemist. The story encourages listening to one's heart, embracing the journey, and recognizing that true treasure often lies in the growth we undergo."
+  },
+  {
+    "id": "name-of-the-wind",
+    "title": "The Name of the Wind",
+    "themes": [
+      "music",
+      "magic",
+      "fame",
+      "loss"
+    ],
+    "summary_short": "Kvothe recounts his rise from orphan to prodigy and the cost of legends.",
+    "summary_full": "Patrick Rothfuss's fantasy follows Kvothe, a gifted musician and arcanist, as he studies at the University, seeks the truth about the Chandrian, and grapples with poverty, pride, and love. Framed as a tale told over three days, it explores how stories shape identity."
+  },
+  {
+    "id": "hitchhikers-guide",
+    "title": "The Hitchhiker's Guide to the Galaxy",
+    "themes": [
+      "absurdism",
+      "adventure",
+      "satire",
+      "science-fiction"
+    ],
+    "summary_short": "Earth is demolished; Arthur Dent hitchhikes across a bizarre cosmos.",
+    "summary_full": "Douglas Adams's comic romp begins with Earth's destruction to make way for a hyperspace bypass. Arthur Dent, saved by Ford Prefect, joins a cast of eccentrics aboard the Heart of Gold. The novel lampoons bureaucracy, philosophy, and meaning itself— reminding us not to panic."
+  },
+  {
+    "id": "crime-and-punishment",
+    "title": "Crime and Punishment",
+    "themes": [
+      "morality",
+      "guilt",
+      "redemption",
+      "poverty"
+    ],
+    "summary_short": "A student commits murder and wrestles with guilt and justification.",
+    "summary_full": "Fyodor Dostoevsky's psychological novel delves into the mind of Raskolnikov, who murders a pawnbroker to prove a theory about extraordinary individuals. Haunted by conscience, he confronts suffering, compassion, and the possibility of redemption through love and confession."
+  }
+]
