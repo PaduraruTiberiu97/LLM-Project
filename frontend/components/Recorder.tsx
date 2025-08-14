@@ -31,15 +31,17 @@ export default function Recorder({ onText }: { onText: (text: string) => void })
     setRecording(false);
   }
 
-   return (
+  return (
     <button
       onClick={() => (recording ? stop() : start())}
       aria-label={recording ? "Stop recording" : "Start recording"}
-      className={`inline-flex items-center gap-2 rounded border px-3 py-2 ${
-        recording ? "bg-red-600 text-white border-red-700" : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:shadow"
+      className={`inline-flex items-center justify-center rounded-xl border p-3 ${
+        recording
+          ? "bg-red-600 text-white border-red-700"
+          : "bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 hover:shadow"
       }`}
     >
-      <Mic className="h-4 w-4" /> {recording ? "Stop" : "Record"}
+      <Mic className="h-4 w-4" />
     </button>
   );
 }
