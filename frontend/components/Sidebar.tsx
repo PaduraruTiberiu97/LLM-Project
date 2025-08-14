@@ -26,6 +26,12 @@ export default function Sidebar(){
 }
   useEffect(()=>{ load().catch(()=>{}); },[base]);
 
+  useEffect(() => {
+    const handler = () => load().catch(() => {});
+    window.addEventListener("chat-updated", handler);
+    return () => window.removeEventListener("chat-updated", handler);
+  }, [base]);
+
   async function newChat(){
     const res = await fetch(base+"/chats", { method: "POST"});
     const data = await res.json();

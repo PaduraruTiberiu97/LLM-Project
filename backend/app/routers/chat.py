@@ -19,6 +19,15 @@ oai = OpenAI()
 CHAT_MODEL = os.getenv("CHAT_MODEL", "gpt-4o-mini")
 
 
+def _make_title(text: str) -> str:
+    """Return a short title based on the first few words of the user's input."""
+    words = text.strip().split()
+    title = " ".join(words[:3])
+    if len(words) > 3:
+        title += "…"
+    return title[:48]
+
+
 class ChatIn(BaseModel):
     message: str
     chat_id: Optional[int] = None
@@ -116,12 +125,15 @@ def chat(body: ChatIn):
     with get_session() as s:
         chat: Optional[Chat] = s.get(Chat, chat_id) if chat_id else None
         if chat is None:
-            # Create a new chat with a short title from the user's input
-            title = user_input[:48] + ("…" if len(user_input) > 48 else "")
-            chat = Chat(title=title)
+            # Create a new chat using the first few words as title
+            chat = Chat(title=_make_title(user_input))
             s.add(chat)
             s.commit()
             s.refresh(chat)
+        else:
+            # Update title on first user message if still default
+            if not chat.title or chat.title.lower() == "new chat":
+                chat.title = _make_title(user_input)
 
         # Store user and assistant messages
         s.add(Message(chat_id=chat.id, role="user", content=user_input))
