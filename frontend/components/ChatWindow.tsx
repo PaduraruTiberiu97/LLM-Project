@@ -1,10 +1,10 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import MessageBubble, { ChatMsg } from "./MessageBubble";
 import TypingDots from "./TypingDots";
 import Spinner from "./Spinner";
 import ImageLightbox from "./ImageLightbox";
-import { ImageIcon, ArrowUp } from "lucide-react";
+import { ImageIcon, Mic, Send, Volume2 } from "lucide-react";
 import Recorder from "./Recorder";
 
 function useApiBase() {
@@ -33,14 +33,11 @@ export default function ChatWindow({
   const [sending, setSending] = useState(false);
   const [assistantTyping, setAssistantTyping] = useState(false);
   const [imgLoading, setImgLoading] = useState(false);
+  const [ttsLoading, setTtsLoading] = useState(false);
   const [lightbox, setLightbox] = useState<string | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const base = useApiBase();
-
-  useEffect(() => {
-    if (seedMessages) {
-      setMsgs(seedMessages.map((m) => ({ role: m.role, content: m.content })));
-    }
-  }, [seedMessages]);
 
   async function send(text?: string) {
     const message = (text ?? input).trim();
@@ -66,7 +63,20 @@ export default function ChatWindow({
 
       const reply = data?.reply ?? "(no reply)";
       setMsgs((m) => [...m, { role: "assistant", content: reply }]);
-      window.dispatchEvent(new Event("chat-updated"));
+
+      // TTS (optional, with spinner)
+      setTtsLoading(true);
+      try {
+        const tts = await fetch(base + "/tts?text=" + encodeURIComponent(stripMarkdown(reply)));
+        if (tts.ok) {
+          const blob = await tts.blob();
+          const url = URL.createObjectURL(blob);
+          setAudioUrl(url);
+          setTimeout(() => audioRef.current?.play(), 100);
+        }
+      } finally {
+        setTtsLoading(false);
+      }
     } catch (e) {
       setMsgs((m) => [...m, { role: "assistant", content: "Sorry, something went wrong." }]);
     } finally {
@@ -103,45 +113,35 @@ export default function ChatWindow({
     }
   }
 
-  async function speak(text: string) {
-    const res = await fetch(
-      base + "/tts?text=" + encodeURIComponent(stripMarkdown(text))
-    );
-    if (res.ok) {
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      audio.play();
-    }
-  }
-
   useEffect(() => {
     // Preload book list silently; helpful for first load warmup
     fetch(base + "/books").catch(() => {});
   }, [base]);
 
   return (
-    <div className="mx-auto flex h-screen max-w-3xl flex-col p-6">
+    <div className="mx-auto max-w-3xl p-6 space-y-4">
       {/* Header */}
-      <div className="mb-4 flex items-center justify-between">
+      <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold tracking-tight">Smart Librarian</h1>
-        <button
-          onClick={genCover}
-          disabled={imgLoading}
-          className="inline-flex items-center gap-2 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 hover:shadow disabled:opacity-60"
-        >
-          <ImageIcon className="h-4 w-4" /> {imgLoading ? "Generating..." : "Generate cover"}
-        </button>
+        <div className="flex items-center gap-2">
+          <Recorder onText={(t) => setInput(t)} />
+          <button
+            onClick={genCover}
+            disabled={imgLoading}
+            className="inline-flex items-center gap-2 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 hover:shadow disabled:opacity-60"
+          >
+            <ImageIcon className="h-4 w-4" /> {imgLoading ? "Generating..." : "Generate cover"}
+          </button>
+        </div>
       </div>
 
       {/* Chat area */}
-      <div className="flex-1 overflow-y-auto rounded-2xl border border-slate-200 dark:border-slate-700 p-4 space-y-3 bg-white dark:bg-slate-800">
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-700 p-4 space-y-3 bg-white dark:bg-slate-800 min-h-[320px]">
         {msgs.map((m, i) => (
           <MessageBubble
             key={i}
             msg={m}
             onCopy={(t) => navigator.clipboard.writeText(t)}
-            onSpeak={speak}
             onImageClick={(src) => setLightbox(src)}
           />
         ))}
@@ -149,11 +149,6 @@ export default function ChatWindow({
           <div className="flex items-center gap-2 text-slate-500">
             <TypingDots />
             <span className="text-sm">Assistant is thinking…</span>
-          </div>
-        )}
-        {msgs.length === 0 && !assistantTyping && (
-          <div className="flex h-full items-center justify-center text-center text-slate-500">
-            Ask a question to start the conversation.
           </div>
         )}
       </div>
@@ -164,7 +159,7 @@ export default function ChatWindow({
           e.preventDefault();
           send();
         }}
-        className="mt-4 flex items-center gap-2"
+        className="flex items-center gap-2"
       >
         <input
           className="flex-1 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-3 shadow-sm focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-700"
@@ -172,14 +167,23 @@ export default function ChatWindow({
           value={input}
           onChange={(e) => setInput(e.target.value)}
         />
-        <Recorder onText={(t) => setInput(t)} />
         <button
           disabled={sending}
-          className="inline-flex items-center justify-center rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 p-3 hover:opacity-95 disabled:opacity-60"
+          className="inline-flex items-center gap-2 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-4 py-3 hover:opacity-95 disabled:opacity-60"
         >
-          {sending ? <Spinner className="h-4 w-4" /> : <ArrowUp className="h-4 w-4" />}
+          {sending ? <Spinner className="h-4 w-4" /> : <Send className="h-4 w-4" />} Send
         </button>
       </form>
+
+      {/* Audio player + indicator */}
+      <div className="flex items-center gap-2">
+        <audio ref={audioRef} src={audioUrl ?? undefined} controls className="w-full" />
+        {ttsLoading && (
+          <div className="inline-flex items-center gap-1 text-sm text-slate-500">
+            <Spinner /> <Volume2 className="h-3.5 w-3.5" /> Generating audio…
+          </div>
+        )}
+      </div>
 
       {lightbox && <ImageLightbox src={lightbox} onClose={() => setLightbox(null)} />}
     </div>

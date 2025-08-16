@@ -2,7 +2,7 @@
 import React from "react";
 import cn from "classnames";
 import ReactMarkdown from "react-markdown";
-import { Bot, User, Copy, Check, Volume2 } from "lucide-react";
+import { Bot, User, Copy, Check } from "lucide-react";
 
 export type ChatMsg = {
   role: "user" | "assistant";
@@ -24,11 +24,10 @@ function Avatar({ role }: { role: "user" | "assistant" }) {
   );
 }
 
-export default function MessageBubble({ msg, onCopy, onImageClick, onSpeak }: {
+export default function MessageBubble({ msg, onCopy, onImageClick }: {
   msg: ChatMsg;
   onCopy?: (text: string) => void;
   onImageClick?: (src: string) => void;
-  onSpeak?: (text: string) => void;
 }) {
   const [copied, setCopied] = React.useState(false);
   async function doCopy() {
@@ -39,7 +38,7 @@ export default function MessageBubble({ msg, onCopy, onImageClick, onSpeak }: {
   }
 
   const bubbleClasses = cn(
-    "rounded-2xl px-3 py-2 text-[0.95rem] leading-relaxed",
+    "group relative rounded-2xl px-3 py-2 text-[0.95rem] leading-relaxed",
     "border shadow-sm",
     msg.role === "user"
       ? "bg-slate-100 dark:bg-slate-700 border-slate-200 dark:border-slate-600"
@@ -54,28 +53,15 @@ export default function MessageBubble({ msg, onCopy, onImageClick, onSpeak }: {
           <div className="prose prose-slate dark:prose-invert prose-p:my-2 prose-pre:my-2 prose-strong:font-semibold">
             <ReactMarkdown>{msg.content}</ReactMarkdown>
           </div>
+          <button
+            onClick={doCopy}
+            className="absolute -right-2 -top-2 hidden group-hover:flex items-center gap-1 rounded-full border px-2 py-1 text-xs bg-white/80 dark:bg-slate-900/70 backdrop-blur border-slate-200 dark:border-slate-700"
+            title="Copy"
+            aria-label="Copy message"
+          >
+            {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+          </button>
         </div>
-
-        {msg.role === "assistant" && (
-          <div className="flex items-center gap-2 text-slate-500">
-            <button
-              onClick={doCopy}
-              className="p-1 hover:text-slate-700 dark:hover:text-slate-300"
-              title="Copy"
-              aria-label="Copy message"
-            >
-              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-            </button>
-            <button
-              onClick={() => onSpeak?.(msg.content)}
-              className="p-1 hover:text-slate-700 dark:hover:text-slate-300"
-              title="Play audio"
-              aria-label="Play audio"
-            >
-              <Volume2 className="h-4 w-4" />
-            </button>
-          </div>
-        )}
 
         {msg.imageB64 && (
           <img
