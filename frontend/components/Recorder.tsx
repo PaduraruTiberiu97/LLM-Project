@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Mic } from "lucide-react"; 
+import { Mic } from "lucide-react";
 
-export default function Recorder({ onText }: { onText: (text: string) => void }) {
+export default function Recorder({ onText, className }: { onText: (text: string) => void; className?: string }) {
   const [recording, setRecording] = useState(false);
   const mediaRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -31,15 +31,17 @@ export default function Recorder({ onText }: { onText: (text: string) => void })
     setRecording(false);
   }
 
-   return (
+  return (
     <button
       onClick={() => (recording ? stop() : start())}
       aria-label={recording ? "Stop recording" : "Start recording"}
-      className={`inline-flex items-center gap-2 rounded border px-3 py-2 ${
-        recording ? "bg-red-600 text-white border-red-700" : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:shadow"
-      }`}
+      className={`p-2 rounded-full ${
+        recording
+          ? "text-red-600"
+          : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+      } ${className || ""}`}
     >
-      <Mic className="h-4 w-4" /> {recording ? "Stop" : "Record"}
+      <Mic className="h-5 w-5" />
     </button>
   );
 }
