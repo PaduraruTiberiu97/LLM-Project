@@ -137,7 +137,7 @@ export default function ChatWindow({
         <div className="relative">
           <Recorder
             onText={(t) => setInput(t)}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
+            className="absolute left-3 top-1/2 -translate-y-1/2"
           />
           <input
             className="w-full rounded-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 py-3 pl-10 pr-10 focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-700"
