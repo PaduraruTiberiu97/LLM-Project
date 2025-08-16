@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Search, Image as ImageIcon, MessageSquare } from "lucide-react";
+import { Plus, Search, Image as ImageIcon, MessageSquare, Trash2 } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 
 function useApiBase(){
@@ -70,14 +70,30 @@ export default function Sidebar() {
       </div>
       <nav className="mt-2 flex-1 overflow-y-auto px-3 space-y-1">
         {filtered.map((c) => (
-          <Link
+          <div
             key={c.id}
-            href={`/chat/${c.id}`}
-            className="flex items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800"
+            className="group flex items-center rounded-md px-2 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800"
           >
-            <MessageSquare className="h-4 w-4" />
-            <span className="truncate">{c.title}</span>
-          </Link>
+            <Link href={`/chat/${c.id}`} className="flex flex-1 items-center gap-2">
+              <MessageSquare className="h-4 w-4" />
+              <span className="truncate">{c.title}</span>
+            </Link>
+            <button
+              onClick={async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                await fetch(base + `/chats/${c.id}`, { method: "DELETE" });
+                window.dispatchEvent(new Event("chats-changed"));
+                if (window.location.pathname === `/chat/${c.id}`) {
+                  window.location.href = "/";
+                }
+              }}
+              className="ml-2 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-600"
+              aria-label="Delete chat"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
         ))}
         {filtered.length === 0 && (
           <div className="text-slate-500 text-sm">No chats yet.</div>
