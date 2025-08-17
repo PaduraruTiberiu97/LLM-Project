@@ -8,7 +8,10 @@ import { Send, ImagePlus } from "lucide-react";
 import Recorder from "./Recorder";
 
 function useApiBase() {
-  return useMemo(() => process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000", []);
+  return useMemo(
+    () => process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000",
+    []
+  );
 }
 
 function stripMarkdown(s: string) {
@@ -67,6 +70,7 @@ export default function ChatWindow({
 
   async function speak(text: string, idx: number) {
     const audio = audioRef.current;
+
     // If this message is already playing, stop it
     if (speakingIdx === idx && audio) {
       audio.pause();
@@ -130,7 +134,7 @@ export default function ChatWindow({
       const reply = data?.reply ?? "(no reply)";
       setMsgs((m) => [...m, { role: "assistant", content: reply }]);
       window.dispatchEvent(new Event("chats-changed"));
-    } catch (e) {
+    } catch {
       setMsgs((m) => [...m, { role: "assistant", content: "Sorry, something went wrong." }]);
     } finally {
       setStatus(null);
@@ -240,10 +244,7 @@ export default function ChatWindow({
             >
               <ImagePlus className="h-5 w-5" />
             </button>
-            <Recorder
-              onText={(t) => setInput(t)}
-              onRecordingChange={setRecording}
-            />
+            <Recorder onText={(t) => setInput(t)} onRecordingChange={setRecording} />
             <button
               type="submit"
               disabled={sending}

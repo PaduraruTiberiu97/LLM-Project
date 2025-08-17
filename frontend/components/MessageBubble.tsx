@@ -16,7 +16,9 @@ function Avatar({ role }: { role: "user" | "assistant" }) {
     <div
       className={cn(
         "h-9 w-9 shrink-0 rounded-full grid place-items-center shadow",
-        role === "user" ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900" : "bg-blue-600 text-white"
+        role === "user"
+          ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
+          : "bg-blue-600 text-white"
       )}
     >
       <Icon className="h-5 w-5" />
@@ -24,7 +26,13 @@ function Avatar({ role }: { role: "user" | "assistant" }) {
   );
 }
 
-export default function MessageBubble({ msg, onCopy, onImageClick, onSpeak, speaking }: {
+export default function MessageBubble({
+  msg,
+  onCopy,
+  onImageClick,
+  onSpeak,
+  speaking,
+}: {
   msg: ChatMsg;
   onCopy?: (text: string) => void;
   onImageClick?: (src: string) => void;
@@ -32,6 +40,7 @@ export default function MessageBubble({ msg, onCopy, onImageClick, onSpeak, spea
   speaking?: boolean;
 }) {
   const [copied, setCopied] = React.useState(false);
+
   async function doCopy() {
     if (!onCopy) return;
     onCopy(msg.content);
@@ -48,14 +57,21 @@ export default function MessageBubble({ msg, onCopy, onImageClick, onSpeak, spea
   );
 
   return (
-    <div className={cn("flex gap-3", msg.role === "user" ? "justify-end" : "justify-start")}>
+    <div
+      className={cn(
+        "flex gap-3",
+        msg.role === "user" ? "justify-end" : "justify-start"
+      )}
+    >
       {msg.role === "assistant" && <Avatar role="assistant" />}
+
       <div className="max-w-[80%] space-y-2">
         {msg.content.trim() !== "" && (
           <div className={bubbleClasses}>
             <div className="prose prose-slate dark:prose-invert prose-p:my-2 prose-pre:my-2 prose-strong:font-semibold">
               <ReactMarkdown>{msg.content}</ReactMarkdown>
             </div>
+
             {msg.role === "assistant" && (
               <div className="absolute -right-2 -top-2 hidden group-hover:flex gap-1">
                 <button
@@ -64,8 +80,13 @@ export default function MessageBubble({ msg, onCopy, onImageClick, onSpeak, spea
                   title="Copy"
                   aria-label="Copy message"
                 >
-                  {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                  {copied ? (
+                    <Check className="h-3.5 w-3.5" />
+                  ) : (
+                    <Copy className="h-3.5 w-3.5" />
+                  )}
                 </button>
+
                 {onSpeak && (
                   <button
                     onClick={onSpeak}
@@ -73,24 +94,13 @@ export default function MessageBubble({ msg, onCopy, onImageClick, onSpeak, spea
                     title="Read aloud"
                     aria-label="Read aloud"
                   >
-                    {speaking ? <Square className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
+                    {speaking ? (
+                      <Square className="h-3.5 w-3.5" />
+                    ) : (
+                      <Volume2 className="h-3.5 w-3.5" />
+                    )}
                   </button>
                 )}
               </div>
             )}
           </div>
-        )}
-
-        {msg.imageB64 && (
-          <img
-            src={`data:image/png;base64,${msg.imageB64}`}
-            alt="Generated image"
-            className="max-w-[200px] w-auto h-auto object-contain rounded-xl border border-slate-200 dark:border-slate-700 cursor-zoom-in hover:opacity-95"
-            onClick={() => onImageClick?.(`data:image/png;base64,${msg.imageB64}`)}
-          />
-        )}
-      </div>
-      {msg.role === "user" && <Avatar role="user" />}
-    </div>
-  );
-}
