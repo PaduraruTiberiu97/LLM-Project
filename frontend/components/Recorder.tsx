@@ -21,23 +21,18 @@ export default function Recorder({
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
-
       const mr = new MediaRecorder(stream, { mimeType: "audio/webm" });
       chunksRef.current = [];
       startTimeRef.current = Date.now();
-
       mr.ondataavailable = (e) => {
         if (e.data.size > 0) chunksRef.current.push(e.data);
       };
-
       mr.onstop = async () => {
         const duration = startTimeRef.current ? Date.now() - startTimeRef.current : 0;
         const blob = new Blob(chunksRef.current, { type: "audio/webm" });
         startTimeRef.current = null;
-
-        // Ignore accidental ultra-short taps or empty blobs
-        if (duration < 500 || blob.size === 0) return;
-
+        // ignore near-silent or very short captures which can yield random transcripts
+        if (duration < 800 || blob.size < 2000) return;
         const form = new FormData();
         form.append("file", blob, "voice.webm");
         const base = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
