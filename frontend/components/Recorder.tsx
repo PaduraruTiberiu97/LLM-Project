@@ -45,7 +45,7 @@ export default function Recorder({
           console.error("STT failed", e);
         }
       };
-
+      
       mr.start();
       mediaRef.current = mr;
       setRecording(true);
@@ -72,7 +72,7 @@ export default function Recorder({
         className={`p-2 rounded-full ${
           recording
             ? "text-red-600"
-            : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+            : "text-slate-500 hover:text-slate-900 dark:text-gray-400 dark:hover:text-gray-100"
         }`}
       >
         <Mic className="h-5 w-5" />

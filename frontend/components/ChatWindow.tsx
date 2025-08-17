@@ -53,6 +53,7 @@ export default function ChatWindow({
   const speakingIdxRef = useRef<number | null>(null);
   const [recording, setRecording] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
   const base = useApiBase();
 
   useEffect(() => {
@@ -70,12 +71,17 @@ export default function ChatWindow({
   }, [seedMessages]);
 
   useEffect(() => {
+    const el = listRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [msgs]);
+
+  useEffect(() => {
     speakingIdxRef.current = speakingIdx;
   }, [speakingIdx]);
 
   async function speak(text: string, idx: number) {
     const audio = audioRef.current;
-    
+
     // If this message is already playing, stop it
     if (speakingIdx === idx && audio) {
       audio.pause();
@@ -198,7 +204,7 @@ export default function ChatWindow({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex-1 overflow-y-auto px-4">
+      <div ref={listRef} className="flex-1 overflow-y-auto px-4">
         {msgs.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-6 text-center">
             <h1 className="text-2xl font-semibold">What can I help you with?</h1>
@@ -235,7 +241,7 @@ export default function ChatWindow({
       >
         <div className="relative">
           <input
-            className="w-full rounded-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 py-3 pr-28 pl-4 focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-700"
+            className="w-full rounded-full border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 py-3 pr-28 pl-4 focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-gray-600"
             placeholder={recording ? "" : "Ask anything"}
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -244,7 +250,7 @@ export default function ChatWindow({
             <button
               type="button"
               onClick={generateImage}
-              className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+              className="text-slate-500 hover:text-slate-900 dark:text-gray-400 dark:hover:text-gray-100"
               aria-label="Generate image"
             >
               <ImagePlus className="h-5 w-5" />
@@ -256,7 +262,7 @@ export default function ChatWindow({
             <button
               type="submit"
               disabled={sending}
-              className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+              className="text-slate-500 hover:text-slate-900 dark:text-gray-400 dark:hover:text-gray-100"
             >
               {sending ? <Spinner className="h-5 w-5" /> : <Send className="h-5 w-5" />}
             </button>

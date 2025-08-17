@@ -24,7 +24,7 @@ export default function LibraryPage(){
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {imgs.map(im=> (
               <img key={im.id} src={`data:image/png;base64,${im.b64}`} alt={im.title || "image"}
-                   className="rounded-xl border border-slate-200 dark:border-slate-700 cursor-zoom-in hover:opacity-95"
+                   className="rounded-xl border border-slate-200 dark:border-gray-600 cursor-zoom-in hover:opacity-95"
                    onClick={()=>setOpen(`data:image/png;base64,${im.b64}`)}/>
             ))}
           </div>

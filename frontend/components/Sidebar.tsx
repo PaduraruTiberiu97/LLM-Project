@@ -47,11 +47,11 @@ export default function Sidebar() {
     : [];
 
   return (
-    <aside className="hidden w-60 shrink-0 md:flex md:flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+    <aside className="hidden w-60 shrink-0 md:flex md:flex-col border-r border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-x-hidden">
       <div className="p-3">
         <button
           onClick={newChat}
-          className="flex w-full items-center gap-2 rounded-md bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-3 py-2 hover:opacity-90"
+          className="flex w-full items-center gap-2 rounded-md bg-slate-900 text-white dark:bg-white dark:text-gray-900 px-3 py-2 hover:opacity-90"
         >
           <Plus className="h-4 w-4" /> New chat
         </button>
@@ -63,23 +63,23 @@ export default function Sidebar() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search chats"
-            className="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-transparent py-2 pl-8 pr-2 text-sm outline-none"
+            className="w-full rounded-md border border-slate-300 dark:border-gray-600 bg-transparent py-2 pl-8 pr-2 text-sm outline-none"
           />
         </div>
         <Link
           href="/library"
-          className="flex items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800"
+          className="flex items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-slate-100 dark:hover:bg-gray-700"
         >
           <BookOpen className="h-4 w-4" /> Library
         </Link>
       </div>
-      <nav className="mt-2 flex-1 overflow-y-auto px-3 space-y-1">
+      <nav className="mt-2 flex-1 overflow-y-auto overflow-x-hidden px-3 space-y-1">
         {filtered.map((c) => (
           <div
             key={c.id}
-            className="group flex items-center rounded-md px-2 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800"
+            className="group flex items-center rounded-md px-2 py-2 text-sm hover:bg-slate-100 dark:hover:bg-gray-700"
           >
-            <Link href={`/chat/${c.id}`} className="flex flex-1 items-center gap-2">
+            <Link href={`/chat/${c.id}`} className="flex flex-1 min-w-0 items-center gap-2">
               <MessageSquare className="h-4 w-4" />
               <span className="truncate">{c.title}</span>
             </Link>
@@ -104,7 +104,7 @@ export default function Sidebar() {
           <div className="text-slate-500 text-sm">No chats yet.</div>
         )}
       </nav>
-      <div className="p-3 border-t border-slate-200 dark:border-slate-800">
+      <div className="p-3 border-t border-slate-200 dark:border-gray-700">
         <ThemeToggle />
       </div>
     </aside>
