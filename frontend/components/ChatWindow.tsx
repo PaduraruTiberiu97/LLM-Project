@@ -4,7 +4,7 @@ import MessageBubble, { ChatMsg } from "./MessageBubble";
 import TypingDots from "./TypingDots";
 import Spinner from "./Spinner";
 import ImageLightbox from "./ImageLightbox";
-import { ImageIcon, Mic, Send, Volume2 } from "lucide-react";
+import { Send, ImagePlus } from "lucide-react";
 import Recorder from "./Recorder";
 
 function useApiBase() {
@@ -24,26 +24,103 @@ export default function ChatWindow({
   seedMessages,
 }: {
   chatId?: number;
-  seedMessages?: { role: "user" | "assistant"; content: string }[];
+  seedMessages?: {
+    role: "user" | "assistant";
+    content: string;
+    imageB64?: string;
+    image_b64?: string;
+  }[];
 }) {
   const [input, setInput] = useState("");
   const [msgs, setMsgs] = useState<ChatMsg[]>(
-    seedMessages?.map((m) => ({ role: m.role, content: m.content })) || []
+    seedMessages
+      ?.map((m) => ({
+        role: m.role,
+        content: m.content || "",
+        imageB64: m.imageB64 || m.image_b64,
+      }))
+      .filter((m) => m.content.trim() !== "" || m.imageB64)
+      || []
   );
   const [sending, setSending] = useState(false);
-  const [assistantTyping, setAssistantTyping] = useState(false);
-  const [imgLoading, setImgLoading] = useState(false);
-  const [ttsLoading, setTtsLoading] = useState(false);
+  const [status, setStatus] = useState<"thinking" | "generating" | null>(null);
   const [lightbox, setLightbox] = useState<string | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [speakingIdx, setSpeakingIdx] = useState<number | null>(null);
+  const speakingIdxRef = useRef<number | null>(null);
+  const [recording, setRecording] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
   const base = useApiBase();
+
+  useEffect(() => {
+    if (seedMessages) {
+      setMsgs(
+        seedMessages
+          .map((m) => ({
+            role: m.role,
+            content: m.content || "",
+            imageB64: m.imageB64 || (m as any).image_b64,
+          }))
+          .filter((m) => m.content.trim() !== "" || m.imageB64)
+      );
+    }
+  }, [seedMessages]);
+
+  useEffect(() => {
+    const el = listRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [msgs]);
+
+  useEffect(() => {
+    speakingIdxRef.current = speakingIdx;
+  }, [speakingIdx]);
+
+  async function speak(text: string, idx: number) {
+    const audio = audioRef.current;
+    // If this message is already playing, stop it
+    if (speakingIdx === idx && audio) {
+      audio.pause();
+      audio.currentTime = 0;
+      setSpeakingIdx(null);
+      return;
+    }
+
+    // Stop any existing playback
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
+
+    setSpeakingIdx(idx);
+    try {
+      const tts = await fetch(
+        base + "/tts?text=" + encodeURIComponent(stripMarkdown(text))
+      );
+      if (tts.ok) {
+        const blob = await tts.blob();
+        const url = URL.createObjectURL(blob);
+        setAudioUrl(url);
+        setTimeout(() => {
+          const a = audioRef.current;
+          if (a && speakingIdxRef.current === idx) {
+            a.play();
+            a.onended = () => setSpeakingIdx(null);
+          }
+        }, 100);
+      } else {
+        setSpeakingIdx(null);
+      }
+    } catch {
+      setSpeakingIdx(null);
+    }
+  }
 
   async function send(text?: string) {
     const message = (text ?? input).trim();
     if (!message || sending) return;
     setSending(true);
-    setAssistantTyping(true);
+    setStatus("thinking");
     setInput("");
     setMsgs((m) => [...m, { role: "user", content: message }]);
 
@@ -63,53 +140,56 @@ export default function ChatWindow({
 
       const reply = data?.reply ?? "(no reply)";
       setMsgs((m) => [...m, { role: "assistant", content: reply }]);
-
-      // TTS (optional, with spinner)
-      setTtsLoading(true);
-      try {
-        const tts = await fetch(base + "/tts?text=" + encodeURIComponent(stripMarkdown(reply)));
-        if (tts.ok) {
-          const blob = await tts.blob();
-          const url = URL.createObjectURL(blob);
-          setAudioUrl(url);
-          setTimeout(() => audioRef.current?.play(), 100);
-        }
-      } finally {
-        setTtsLoading(false);
-      }
+      window.dispatchEvent(new Event("chats-changed"));
     } catch (e) {
       setMsgs((m) => [...m, { role: "assistant", content: "Sorry, something went wrong." }]);
     } finally {
-      setAssistantTyping(false);
+      setStatus(null);
       setSending(false);
     }
   }
 
-  async function genCover() {
-    if (imgLoading) return;
-    setImgLoading(true);
+  async function generateImage() {
+    if (sending) return;
+    const lastAssistant = [...msgs].reverse().find((m) => m.role === "assistant");
+    if (!lastAssistant) {
+      setMsgs((m) => [
+        ...m,
+        { role: "assistant", content: "No context for image generation." },
+      ]);
+      return;
+    }
+    setSending(true);
+    setStatus("generating");
     try {
-      const last = [...msgs].reverse().find((m) => m.role === "assistant");
-      const prompt = last
-        ? `Create a tasteful book cover illustration for this recommendation: ${last.content}`
-        : "Create a tasteful, minimalist book cover with abstract shapes and soft gradients.";
-
       const res = await fetch(
-        base +
-          "/image?prompt=" +
-          encodeURIComponent(prompt) +
-          (chatId ? `&chat_id=${chatId}` : "")
+        `${base}/image?prompt=${encodeURIComponent(lastAssistant.content)}&chat_id=${chatId ?? ""}`
       );
       const data = await res.json();
-      const b64 = data?.image_b64 ?? null;
-      if (b64) {
-        // Push image inside the chat as an assistant message
-        setMsgs((m) => [...m, { role: "assistant", content: "Generated cover:", imageB64: b64 }]);
+      if (!chatId && data?.chat_id) {
+        window.location.href = "/chat/" + data.chat_id;
+        return;
       }
-    } catch (e) {
-      setMsgs((m) => [...m, { role: "assistant", content: "Couldn't generate image this time." }]);
+      if (data?.image_b64) {
+        setMsgs((m) => [
+          ...m,
+          { role: "assistant", content: "", imageB64: data.image_b64 },
+        ]);
+        window.dispatchEvent(new Event("chats-changed"));
+      } else {
+        setMsgs((m) => [
+          ...m,
+          { role: "assistant", content: "Failed to generate image." },
+        ]);
+      }
+    } catch {
+      setMsgs((m) => [
+        ...m,
+        { role: "assistant", content: "Failed to generate image." },
+      ]);
     } finally {
-      setImgLoading(false);
+      setStatus(null);
+      setSending(false);
     }
   }
 
@@ -119,72 +199,73 @@ export default function ChatWindow({
   }, [base]);
 
   return (
-    <div className="mx-auto max-w-3xl p-6 space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold tracking-tight">Smart Librarian</h1>
-        <div className="flex items-center gap-2">
-          <Recorder onText={(t) => setInput(t)} />
-          <button
-            onClick={genCover}
-            disabled={imgLoading}
-            className="inline-flex items-center gap-2 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 hover:shadow disabled:opacity-60"
-          >
-            <ImageIcon className="h-4 w-4" /> {imgLoading ? "Generating..." : "Generate cover"}
-          </button>
-        </div>
-      </div>
-
-      {/* Chat area */}
-      <div className="rounded-2xl border border-slate-200 dark:border-slate-700 p-4 space-y-3 bg-white dark:bg-slate-800 min-h-[320px]">
-        {msgs.map((m, i) => (
-          <MessageBubble
-            key={i}
-            msg={m}
-            onCopy={(t) => navigator.clipboard.writeText(t)}
-            onImageClick={(src) => setLightbox(src)}
-          />
-        ))}
-        {assistantTyping && (
-          <div className="flex items-center gap-2 text-slate-500">
-            <TypingDots />
-            <span className="text-sm">Assistant is thinking…</span>
+    <div className="flex h-full flex-col">
+      <div ref={listRef} className="flex-1 overflow-y-auto px-4">
+        {msgs.length === 0 ? (
+          <div className="flex h-full flex-col items-center justify-center gap-6 text-center">
+            <h1 className="text-2xl font-semibold">What can I help you with?</h1>
+          </div>
+        ) : (
+          <div className="space-y-4 py-4">
+            {msgs.map((m, i) => (
+              <MessageBubble
+                key={i}
+                msg={m}
+                onCopy={(t) => navigator.clipboard.writeText(t)}
+                onImageClick={(src) => setLightbox(src)}
+                onSpeak={m.role === "assistant" ? () => speak(m.content, i) : undefined}
+                speaking={speakingIdx === i}
+              />
+            ))}
+            {status && (
+              <div className="flex items-center gap-2 text-slate-500">
+                <TypingDots />
+                <span className="text-sm">
+                  {status === "generating" ? "Generating image…" : "Assistant is thinking…"}
+                </span>
+              </div>
+            )}
           </div>
         )}
       </div>
-
-      {/* Composer */}
       <form
         onSubmit={(e) => {
           e.preventDefault();
           send();
         }}
-        className="flex items-center gap-2"
+        className="p-4"
       >
-        <input
-          className="flex-1 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-3 shadow-sm focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-700"
-          placeholder="Vreau o carte despre prietenie și magie… / I want a novel about friendship and magic"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-        />
-        <button
-          disabled={sending}
-          className="inline-flex items-center gap-2 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-4 py-3 hover:opacity-95 disabled:opacity-60"
-        >
-          {sending ? <Spinner className="h-4 w-4" /> : <Send className="h-4 w-4" />} Send
-        </button>
-      </form>
-
-      {/* Audio player + indicator */}
-      <div className="flex items-center gap-2">
-        <audio ref={audioRef} src={audioUrl ?? undefined} controls className="w-full" />
-        {ttsLoading && (
-          <div className="inline-flex items-center gap-1 text-sm text-slate-500">
-            <Spinner /> <Volume2 className="h-3.5 w-3.5" /> Generating audio…
+        <div className="relative">
+          <input
+            className="w-full rounded-full border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 py-3 pr-28 pl-4 focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-gray-600"
+            placeholder={recording ? "" : "Ask anything"}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+          />
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={generateImage}
+              className="text-slate-500 hover:text-slate-900 dark:text-gray-400 dark:hover:text-gray-100"
+              aria-label="Generate image"
+            >
+              <ImagePlus className="h-5 w-5" />
+            </button>
+            <Recorder
+              onText={(t) => setInput(t)}
+              onRecordingChange={setRecording}
+            />
+            <button
+              type="submit"
+              disabled={sending}
+              className="text-slate-500 hover:text-slate-900 dark:text-gray-400 dark:hover:text-gray-100"
+            >
+              {sending ? <Spinner className="h-5 w-5" /> : <Send className="h-5 w-5" />}
+            </button>
           </div>
-        )}
-      </div>
-
+        </div>
+      </form>
+      <audio ref={audioRef} src={audioUrl ?? undefined} className="hidden" />
       {lightbox && <ImageLightbox src={lightbox} onClose={() => setLightbox(null)} />}
     </div>
   );
