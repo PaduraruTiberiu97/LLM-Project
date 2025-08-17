@@ -24,11 +24,11 @@ export default function LibraryPage(){
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {imgs.map(im=> (
               <img key={im.id} src={`data:image/png;base64,${im.b64}`} alt={im.title || "image"}
-                   className="rounded-xl border border-slate-200 dark:border-gray-600 cursor-zoom-in hover:opacity-95"
+                   className="rounded-xl border border-gray-300 dark:border-gray-600 cursor-zoom-in hover:opacity-95"
                    onClick={()=>setOpen(`data:image/png;base64,${im.b64}`)}/>
             ))}
           </div>
-          {imgs.length===0 && <div className="text-slate-500">No images yet.</div>}
+          {imgs.length===0 && <div className="text-gray-500">No images yet.</div>}
         </>
       )}
       {open && <ImageLightbox src={open} onClose={()=>setOpen(null)}/>}
