@@ -45,6 +45,7 @@ export default function Recorder({
           console.error("STT failed", e);
         }
       };
+      
       mr.start();
       mediaRef.current = mr;
       setRecording(true);
