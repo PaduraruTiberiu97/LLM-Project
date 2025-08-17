@@ -43,10 +43,11 @@ export default function ChatWindow({
     })) || []
   );
   const [sending, setSending] = useState(false);
-  const [assistantTyping, setAssistantTyping] = useState(false);
+  const [status, setStatus] = useState<"thinking" | "generating" | null>(null);
   const [lightbox, setLightbox] = useState<string | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [speakingIdx, setSpeakingIdx] = useState<number | null>(null);
+  const speakingIdxRef = useRef<number | null>(null);
   const [recording, setRecording] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const base = useApiBase();
@@ -63,17 +64,47 @@ export default function ChatWindow({
     }
   }, [seedMessages]);
 
+  useEffect(() => {
+    speakingIdxRef.current = speakingIdx;
+  }, [speakingIdx]);
+
   async function speak(text: string, idx: number) {
+    const audio = audioRef.current;
+
+    // If this message is already playing, stop it
+    if (speakingIdx === idx && audio) {
+      audio.pause();
+      audio.currentTime = 0;
+      setSpeakingIdx(null);
+      return;
+    }
+
+    // Stop any existing playback
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
+
     setSpeakingIdx(idx);
     try {
-      const tts = await fetch(base + "/tts?text=" + encodeURIComponent(stripMarkdown(text)));
+      const tts = await fetch(
+        base + "/tts?text=" + encodeURIComponent(stripMarkdown(text))
+      );
       if (tts.ok) {
         const blob = await tts.blob();
         const url = URL.createObjectURL(blob);
         setAudioUrl(url);
-        setTimeout(() => audioRef.current?.play(), 100);
+        setTimeout(() => {
+          const a = audioRef.current;
+          if (a && speakingIdxRef.current === idx) {
+            a.play();
+            a.onended = () => setSpeakingIdx(null);
+          }
+        }, 100);
+      } else {
+        setSpeakingIdx(null);
       }
-    } finally {
+    } catch {
       setSpeakingIdx(null);
     }
   }
@@ -82,7 +113,7 @@ export default function ChatWindow({
     const message = (text ?? input).trim();
     if (!message || sending) return;
     setSending(true);
-    setAssistantTyping(true);
+    setStatus("thinking");
     setInput("");
     setMsgs((m) => [...m, { role: "user", content: message }]);
 
@@ -106,7 +137,7 @@ export default function ChatWindow({
     } catch {
       setMsgs((m) => [...m, { role: "assistant", content: "Sorry, something went wrong." }]);
     } finally {
-      setAssistantTyping(false);
+      setStatus(null);
       setSending(false);
     }
   }
@@ -122,7 +153,7 @@ export default function ChatWindow({
       return;
     }
     setSending(true);
-    setAssistantTyping(true);
+    setStatus("generating");
     try {
       const res = await fetch(
         `${base}/image?prompt=${encodeURIComponent(lastAssistant.content)}&chat_id=${chatId ?? ""}`
@@ -150,7 +181,7 @@ export default function ChatWindow({
         { role: "assistant", content: "Failed to generate image." },
       ]);
     } finally {
-      setAssistantTyping(false);
+      setStatus(null);
       setSending(false);
     }
   }
@@ -179,10 +210,12 @@ export default function ChatWindow({
                 speaking={speakingIdx === i}
               />
             ))}
-            {assistantTyping && (
+            {status && (
               <div className="flex items-center gap-2 text-slate-500">
                 <TypingDots />
-                <span className="text-sm">Assistant is thinking…</span>
+                <span className="text-sm">
+                  {status === "generating" ? "Generating image…" : "Assistant is thinking…"}
+                </span>
               </div>
             )}
           </div>
