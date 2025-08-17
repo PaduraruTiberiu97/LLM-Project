@@ -18,3 +18,25 @@
 .typing-dots > i:nth-child(2){ animation-delay: .15s; }
 .typing-dots > i:nth-child(3){ animation-delay: .3s; }
 @keyframes bounce { 0%,80%,100%{ transform: translateY(0); opacity:.4 } 40%{ transform: translateY(-3px); opacity:1 } }
+
+/* recording indicator */
+.recording-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+}
+.recording-bars span {
+  display: block;
+  width: 3px;
+  height: 12px;
+  background: rgb(220 38 38); /* red-600 */
+  animation: recording-bar 1s infinite ease-in-out;
+}
+.recording-bars span:nth-child(2) { animation-delay: -0.8s; }
+.recording-bars span:nth-child(3) { animation-delay: -0.6s; }
+.recording-bars span:nth-child(4) { animation-delay: -0.4s; }
+.recording-bars span:nth-child(5) { animation-delay: -0.2s; }
+@keyframes recording-bar {
+  0%,100% { transform: scaleY(0.4); }
+  50% { transform: scaleY(1); }
+}
