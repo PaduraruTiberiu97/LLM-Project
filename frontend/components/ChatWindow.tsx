@@ -8,7 +8,10 @@ import { Send, ImagePlus } from "lucide-react";
 import Recorder from "./Recorder";
 
 function useApiBase() {
-  return useMemo(() => process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000", []);
+  return useMemo(
+    () => process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000",
+    []
+  );
 }
 
 function stripMarkdown(s: string) {
@@ -44,6 +47,7 @@ export default function ChatWindow({
   const [lightbox, setLightbox] = useState<string | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [speakingIdx, setSpeakingIdx] = useState<number | null>(null);
+  const [recording, setRecording] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const base = useApiBase();
 
@@ -62,9 +66,7 @@ export default function ChatWindow({
   async function speak(text: string, idx: number) {
     setSpeakingIdx(idx);
     try {
-      const tts = await fetch(
-        base + "/tts?text=" + encodeURIComponent(stripMarkdown(text))
-      );
+      const tts = await fetch(base + "/tts?text=" + encodeURIComponent(stripMarkdown(text)));
       if (tts.ok) {
         const blob = await tts.blob();
         const url = URL.createObjectURL(blob);
@@ -110,14 +112,20 @@ export default function ChatWindow({
   }
 
   async function generateImage() {
-    const prompt = window.prompt("Describe the image to generate");
-    if (!prompt || sending) return;
+    if (sending) return;
+    const lastAssistant = [...msgs].reverse().find((m) => m.role === "assistant");
+    if (!lastAssistant) {
+      setMsgs((m) => [
+        ...m,
+        { role: "assistant", content: "No context for image generation." },
+      ]);
+      return;
+    }
     setSending(true);
     setAssistantTyping(true);
-    setMsgs((m) => [...m, { role: "user", content: prompt }]);
     try {
       const res = await fetch(
-        `${base}/image?prompt=${encodeURIComponent(prompt)}&chat_id=${chatId ?? ""}`
+        `${base}/image?prompt=${encodeURIComponent(lastAssistant.content)}&chat_id=${chatId ?? ""}`
       );
       const data = await res.json();
       if (!chatId && data?.chat_id) {
@@ -146,7 +154,7 @@ export default function ChatWindow({
       setSending(false);
     }
   }
-  
+
   useEffect(() => {
     // Preload book list silently; helpful for first load warmup
     fetch(base + "/books").catch(() => {});
@@ -190,7 +198,7 @@ export default function ChatWindow({
         <div className="relative">
           <input
             className="w-full rounded-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 py-3 pr-28 pl-4 focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-700"
-            placeholder="Ask anything"
+            placeholder={recording ? "" : "Ask anything"}
             value={input}
             onChange={(e) => setInput(e.target.value)}
           />
@@ -203,7 +211,7 @@ export default function ChatWindow({
             >
               <ImagePlus className="h-5 w-5" />
             </button>
-            <Recorder onText={(t) => setInput(t)} />
+            <Recorder onText={(t) => setInput(t)} onRecordingChange={setRecording} />
             <button
               type="submit"
               disabled={sending}

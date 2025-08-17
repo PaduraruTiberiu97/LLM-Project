@@ -2,33 +2,59 @@
 import { useRef, useState } from "react";
 import { Mic } from "lucide-react";
 
-export default function Recorder({ onText, className }: { onText: (text: string) => void; className?: string }) {
+export default function Recorder({
+  onText,
+  onRecordingChange,
+  className,
+}: {
+  onText: (text: string) => void;
+  onRecordingChange?: (recording: boolean) => void;
+  className?: string;
+}) {
   const [recording, setRecording] = useState(false);
   const mediaRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
+  const startTimeRef = useRef<number | null>(null);
 
   async function start() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
+
       const mr = new MediaRecorder(stream, { mimeType: "audio/webm" });
       chunksRef.current = [];
+      startTimeRef.current = Date.now();
+
       mr.ondataavailable = (e) => {
         if (e.data.size > 0) chunksRef.current.push(e.data);
       };
+
       mr.onstop = async () => {
+        const duration = startTimeRef.current ? Date.now() - startTimeRef.current : 0;
         const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        startTimeRef.current = null;
+
+        // Ignore accidental ultra-short taps or empty blobs
+        if (duration < 500 || blob.size === 0) return;
+
         const form = new FormData();
         form.append("file", blob, "voice.webm");
         const base = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
-        const res = await fetch(base + "/stt", { method: "POST", body: form });
-        const data = await res.json();
-        if (data?.text) onText(data.text);
+        try {
+          const res = await fetch(base + "/stt", { method: "POST", body: form });
+          const data = await res.json();
+          const text = (data?.text || "").trim();
+          if (text) onText(text);
+        } catch (e) {
+          console.error("STT failed", e);
+        }
       };
+
       mr.start();
       mediaRef.current = mr;
       setRecording(true);
+      onRecordingChange?.(true);
     } catch (e) {
       console.error("Mic access failed", e);
       setRecording(false);
@@ -39,6 +65,7 @@ export default function Recorder({ onText, className }: { onText: (text: string)
     mediaRef.current?.stop();
     streamRef.current?.getTracks().forEach((t) => t.stop());
     setRecording(false);
+    onRecordingChange?.(false);
   }
 
   return (

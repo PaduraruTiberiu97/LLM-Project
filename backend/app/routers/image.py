@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import os
+from datetime import datetime
+from typing import Optional
+
 from fastapi import APIRouter, Query
 from openai import OpenAI
-import os
-from typing import Optional
-from datetime import datetime
 
 from ..db import get_session
 from ..models import ImageAsset, Chat, Message
@@ -39,10 +40,13 @@ def gen_image(
                 chat.title = prompt[:48] + ("…" if len(prompt) > 48 else "")
 
         s.add(Message(chat_id=chat.id, role="user", content=prompt))
+
         asset = ImageAsset(chat_id=chat.id, title=title or prompt[:64], b64=b64)
         s.add(asset)
+
         chat.updated_at = datetime.utcnow()
         s.add(chat)
+
         s.commit()
         s.refresh(asset)
 
