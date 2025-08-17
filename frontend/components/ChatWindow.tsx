@@ -8,7 +8,10 @@ import { Send, ImagePlus } from "lucide-react";
 import Recorder from "./Recorder";
 
 function useApiBase() {
-  return useMemo(() => process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000", []);
+  return useMemo(
+    () => process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000",
+    []
+  );
 }
 
 function stripMarkdown(s: string) {
@@ -63,9 +66,7 @@ export default function ChatWindow({
   async function speak(text: string, idx: number) {
     setSpeakingIdx(idx);
     try {
-      const tts = await fetch(
-        base + "/tts?text=" + encodeURIComponent(stripMarkdown(text))
-      );
+      const tts = await fetch(base + "/tts?text=" + encodeURIComponent(stripMarkdown(text)));
       if (tts.ok) {
         const blob = await tts.blob();
         const url = URL.createObjectURL(blob);
@@ -210,10 +211,7 @@ export default function ChatWindow({
             >
               <ImagePlus className="h-5 w-5" />
             </button>
-            <Recorder
-              onText={(t) => setInput(t)}
-              onRecordingChange={setRecording}
-            />
+            <Recorder onText={(t) => setInput(t)} onRecordingChange={setRecording} />
             <button
               type="submit"
               disabled={sending}
