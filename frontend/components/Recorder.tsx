@@ -6,11 +6,13 @@ export default function Recorder({ onText, className }: { onText: (text: string)
   const [recording, setRecording] = useState(false);
   const mediaRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
 
   async function start() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mr = new MediaRecorder(stream);
+      streamRef.current = stream;
+      const mr = new MediaRecorder(stream, { mimeType: "audio/webm" });
       chunksRef.current = [];
       mr.ondataavailable = (e) => {
         if (e.data.size > 0) chunksRef.current.push(e.data);
@@ -35,6 +37,7 @@ export default function Recorder({ onText, className }: { onText: (text: string)
 
   function stop() {
     mediaRef.current?.stop();
+    streamRef.current?.getTracks().forEach((t) => t.stop());
     setRecording(false);
   }
 

@@ -5,7 +5,6 @@ import {
   Plus,
   Search,
   Image as ImageIcon,
-  ImagePlus,
   MessageSquare,
   Trash2,
 } from "lucide-react";
@@ -49,23 +48,7 @@ export default function Sidebar() {
   const filtered = Array.isArray(chats)
     ? chats.filter((c) => !q || c.title.toLowerCase().includes(q.toLowerCase()))
     : [];
-
-  async function generateImage() {
-    const prompt = window.prompt("Describe the image to generate");
-    if (!prompt) return;
-    try {
-      const res = await fetch(base + `/image?prompt=${encodeURIComponent(prompt)}`);
-      const data = await res.json();
-      if (data?.image_b64) {
-        setGenImg(`data:image/png;base64,${data.image_b64}`);
-      }
-    } catch {
-      alert("Failed to generate image");
-    }
-  }
-
   return (
-    <>
     <aside className="hidden w-60 shrink-0 md:flex md:flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
       <div className="p-3">
         <button
@@ -123,14 +106,7 @@ export default function Sidebar() {
           <div className="text-slate-500 text-sm">No chats yet.</div>
         )}
       </nav>
-      <div className="p-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-        <button
-          onClick={generateImage}
-          className="p-2 rounded-md text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-          aria-label="Generate image"
-        >
-          <ImagePlus className="h-5 w-5" />
-        </button>
+      <div className="p-3 border-t border-slate-200 dark:border-slate-800">
         <ThemeToggle />
       </div>
     </aside>
