@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Query
-from openai import OpenAI
-import os, base64  # base64 kept if you later want to decode/save files
+import os
+from datetime import datetime
 from typing import Optional
 
+from fastapi import APIRouter, Query
+from openai import OpenAI
+
 from ..db import get_session
-from ..models import ImageAsset
+from ..models import ImageAsset, Chat, Message
 
 
 router = APIRouter(prefix="", tags=["image"])
@@ -24,10 +26,28 @@ def gen_image(
     res = client.images.generate(model=model, prompt=prompt, size="1024x1024")
     b64 = res.data[0].b64_json
 
-    # Persist generated image
+    # Persist chat, user prompt and generated image
     with get_session() as s:
-        asset = ImageAsset(chat_id=chat_id, title=title or prompt[:64], b64=b64)
+        chat = s.get(Chat, chat_id) if chat_id else None
+        if chat is None:
+            title_text = title or prompt[:48] + ("…" if len(prompt) > 48 else "")
+            chat = Chat(title=title_text)
+            s.add(chat)
+            s.commit()
+            s.refresh(chat)
+        else:
+            if (chat.title or "") == "New Chat":
+                chat.title = prompt[:48] + ("…" if len(prompt) > 48 else "")
+
+        s.add(Message(chat_id=chat.id, role="user", content=prompt))
+
+        asset = ImageAsset(chat_id=chat.id, title=title or prompt[:64], b64=b64)
         s.add(asset)
+
+        chat.updated_at = datetime.utcnow()
+        s.add(chat)
+
         s.commit()
         s.refresh(asset)
-        return {"image_b64": b64, "id": asset.id}
+
+        return {"image_b64": b64, "id": asset.id, "chat_id": chat.id}

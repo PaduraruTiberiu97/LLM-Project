@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Query
-from sqlmodel import select
+from sqlmodel import select, delete
 from ..db import get_session
-from ..models import Chat, Message
-from datetime import datetime
+from ..models import Chat, Message, ImageAsset
 
 router = APIRouter(prefix="", tags=["history"]) 
 
@@ -39,11 +38,35 @@ def get_chat(chat_id: int):
         chat = s.get(Chat, chat_id)
         if not chat:
             return {"id": chat_id, "messages": []}
-        msgs = s.exec(select(Message).where(Message.chat_id==chat_id).order_by(Message.created_at.asc())).all()
+        msgs = s.exec(
+            select(Message).where(Message.chat_id == chat_id).order_by(Message.created_at.asc())
+        ).all()
+        imgs = s.exec(
+            select(ImageAsset).where(ImageAsset.chat_id == chat_id).order_by(ImageAsset.created_at.asc())
+        ).all()
+
+        combined = [
+            {
+                "role": m.role,
+                "content": m.content,
+                "created_at": m.created_at.isoformat(),
+            }
+            for m in msgs
+        ] + [
+            {
+                "role": "assistant",
+                "content": "",
+                "image_b64": i.b64,
+                "created_at": i.created_at.isoformat(),
+            }
+            for i in imgs
+        ]
+        combined.sort(key=lambda x: x["created_at"])
+
         return {
             "id": chat.id,
             "title": chat.title,
-            "messages": [{"role": m.role, "content": m.content, "created_at": m.created_at.isoformat()} for m in msgs]
+            "messages": combined,
         }
 
 @router.delete("/chats/{chat_id}")
@@ -52,8 +75,8 @@ def delete_chat(chat_id: int):
         chat = s.get(Chat, chat_id)
         if not chat:
             return {"ok": True}
-        # cascade-like delete
-        s.exec(select(Message).where(Message.chat_id==chat_id))
+        s.exec(delete(Message).where(Message.chat_id == chat_id))
+        s.exec(delete(ImageAsset).where(ImageAsset.chat_id == chat_id))
         s.delete(chat)
         s.commit()
         return {"ok": True}
