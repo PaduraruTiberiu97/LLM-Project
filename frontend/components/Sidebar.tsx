@@ -9,6 +9,7 @@ import {
   Trash2,
 } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
+import ImageLightbox from "./ImageLightbox";
 
 function useApiBase(){
   return useMemo(() => process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000", []);
@@ -20,6 +21,7 @@ export default function Sidebar() {
   const base = useApiBase();
   const [q, setQ] = useState("");
   const [chats, setChats] = useState<ChatItem[]>([]);
+  const [genImg, setGenImg] = useState<string | null>(null);
 
   async function load() {
     try {
@@ -46,7 +48,6 @@ export default function Sidebar() {
   const filtered = Array.isArray(chats)
     ? chats.filter((c) => !q || c.title.toLowerCase().includes(q.toLowerCase()))
     : [];
-
   return (
     <aside className="hidden w-60 shrink-0 md:flex md:flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
       <div className="p-3">
@@ -109,5 +110,7 @@ export default function Sidebar() {
         <ThemeToggle />
       </div>
     </aside>
+    {genImg && <ImageLightbox src={genImg} onClose={() => setGenImg(null)} />}
+    </>
   );
 }

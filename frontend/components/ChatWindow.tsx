@@ -146,7 +146,7 @@ export default function ChatWindow({
       setSending(false);
     }
   }
-
+  
   useEffect(() => {
     // Preload book list silently; helpful for first load warmup
     fetch(base + "/books").catch(() => {});
