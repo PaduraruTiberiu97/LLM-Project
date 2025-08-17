@@ -2,7 +2,8 @@
 import React from "react";
 import cn from "classnames";
 import ReactMarkdown from "react-markdown";
-import { Bot, User, Copy, Check } from "lucide-react";
+import { Bot, User, Copy, Check, Volume2 } from "lucide-react";
+import Spinner from "./Spinner";
 
 export type ChatMsg = {
   role: "user" | "assistant";
@@ -24,10 +25,12 @@ function Avatar({ role }: { role: "user" | "assistant" }) {
   );
 }
 
-export default function MessageBubble({ msg, onCopy, onImageClick }: {
+export default function MessageBubble({ msg, onCopy, onImageClick, onSpeak, speaking }: {
   msg: ChatMsg;
   onCopy?: (text: string) => void;
   onImageClick?: (src: string) => void;
+  onSpeak?: () => void;
+  speaking?: boolean;
 }) {
   const [copied, setCopied] = React.useState(false);
   async function doCopy() {
@@ -49,25 +52,41 @@ export default function MessageBubble({ msg, onCopy, onImageClick }: {
     <div className={cn("flex gap-3", msg.role === "user" ? "justify-end" : "justify-start")}>
       {msg.role === "assistant" && <Avatar role="assistant" />}
       <div className="max-w-[80%] space-y-2">
-        <div className={bubbleClasses}>
-          <div className="prose prose-slate dark:prose-invert prose-p:my-2 prose-pre:my-2 prose-strong:font-semibold">
-            <ReactMarkdown>{msg.content}</ReactMarkdown>
+        {msg.content && (
+          <div className={bubbleClasses}>
+            <div className="prose prose-slate dark:prose-invert prose-p:my-2 prose-pre:my-2 prose-strong:font-semibold">
+              <ReactMarkdown>{msg.content}</ReactMarkdown>
+            </div>
+            {msg.role === "assistant" && (
+              <div className="absolute -right-2 -top-2 hidden group-hover:flex gap-1">
+                <button
+                  onClick={doCopy}
+                  className="rounded-full border px-2 py-1 text-xs bg-white/80 dark:bg-slate-900/70 backdrop-blur border-slate-200 dark:border-slate-700"
+                  title="Copy"
+                  aria-label="Copy message"
+                >
+                  {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                </button>
+                {onSpeak && (
+                  <button
+                    onClick={onSpeak}
+                    className="rounded-full border px-2 py-1 text-xs bg-white/80 dark:bg-slate-900/70 backdrop-blur border-slate-200 dark:border-slate-700"
+                    title="Read aloud"
+                    aria-label="Read aloud"
+                  >
+                    {speaking ? <Spinner className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
+                  </button>
+                )}
+              </div>
+            )}
           </div>
-          <button
-            onClick={doCopy}
-            className="absolute -right-2 -top-2 hidden group-hover:flex items-center gap-1 rounded-full border px-2 py-1 text-xs bg-white/80 dark:bg-slate-900/70 backdrop-blur border-slate-200 dark:border-slate-700"
-            title="Copy"
-            aria-label="Copy message"
-          >
-            {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-          </button>
-        </div>
+        )}
 
         {msg.imageB64 && (
           <img
             src={`data:image/png;base64,${msg.imageB64}`}
             alt="Generated image"
-            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 cursor-zoom-in hover:opacity-95"
+            className="w-full max-w-xs rounded-xl border border-slate-200 dark:border-slate-700 cursor-zoom-in hover:opacity-95"
             onClick={() => onImageClick?.(`data:image/png;base64,${msg.imageB64}`)}
           />
         )}
