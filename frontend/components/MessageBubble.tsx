@@ -16,7 +16,9 @@ function Avatar({ role }: { role: "user" | "assistant" }) {
     <div
       className={cn(
         "h-9 w-9 shrink-0 rounded-full grid place-items-center shadow",
-        role === "user" ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900" : "bg-blue-600 text-white"
+        role === "user"
+          ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
+          : "bg-blue-600 text-white"
       )}
     >
       <Icon className="h-5 w-5" />
@@ -34,6 +36,7 @@ export default function MessageBubble({ msg, onCopy, onImageClick, onSpeak, spea
   const [copied, setCopied] = React.useState(false);
   const raw = msg.content ?? "";
   const hasText = raw.replace(/\s+/g, "").length > 0;
+  
   async function doCopy() {
     if (!onCopy) return;
     onCopy(raw);
@@ -50,8 +53,14 @@ export default function MessageBubble({ msg, onCopy, onImageClick, onSpeak, spea
   );
 
   return (
-    <div className={cn("flex gap-3", msg.role === "user" ? "justify-end" : "justify-start")}>
+    <div
+      className={cn(
+        "flex gap-3",
+        msg.role === "user" ? "justify-end" : "justify-start"
+      )}
+    >
       {msg.role === "assistant" && <Avatar role="assistant" />}
+
       <div className="max-w-[80%] space-y-2">
         {hasText && (
           <div className={bubbleClasses}>
