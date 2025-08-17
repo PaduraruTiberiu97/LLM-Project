@@ -69,7 +69,7 @@ export default function Sidebar() {
           </div>
           <Link
             href="/library"
-            className="flex items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-since-100 dark:hover:bg-slate-800"
+            className="flex items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800"
           >
             <BookOpen className="h-4 w-4" /> Library
           </Link>

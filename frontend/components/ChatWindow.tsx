@@ -103,7 +103,7 @@ export default function ChatWindow({
       const reply = data?.reply ?? "(no reply)";
       setMsgs((m) => [...m, { role: "assistant", content: reply }]);
       window.dispatchEvent(new Event("chats-changed"));
-    } catch (e) {
+    } catch {
       setMsgs((m) => [...m, { role: "assistant", content: "Sorry, something went wrong." }]);
     } finally {
       setAssistantTyping(false);
