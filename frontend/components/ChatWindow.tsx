@@ -8,7 +8,10 @@ import { Send, ImagePlus } from "lucide-react";
 import Recorder from "./Recorder";
 
 function useApiBase() {
-  return useMemo(() => process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000", []);
+  return useMemo(
+    () => process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000",
+    []
+  );
 }
 
 function stripMarkdown(s: string) {
@@ -78,6 +81,7 @@ export default function ChatWindow({
 
   async function speak(text: string, idx: number) {
     const audio = audioRef.current;
+    
     // If this message is already playing, stop it
     if (speakingIdx === idx && audio) {
       audio.pause();
