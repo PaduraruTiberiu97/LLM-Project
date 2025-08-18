@@ -47,7 +47,7 @@ export default function Sidebar() {
     : [];
 
   return (
-    <aside className="hidden w-60 shrink-0 md:flex md:flex-col h-full border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
+    <aside className="hidden w-60 shrink-0 md:flex md:flex-col h-screen border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">
       <div className="p-3">
         <button
           onClick={newChat}
