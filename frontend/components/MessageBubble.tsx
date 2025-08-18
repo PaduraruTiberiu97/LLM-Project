@@ -92,7 +92,6 @@ export default function MessageBubble({ msg, onCopy, onImageClick, onSpeak, spea
                     ) : (
                       <Volume2 className="h-3.5 w-3.5" aria-hidden="true" />
                     )}
-
                   </button>
                 )}
               </div>
