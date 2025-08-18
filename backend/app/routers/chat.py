@@ -122,6 +122,10 @@ def chat(body: ChatIn):
             s.add(chat)
             s.commit()
             s.refresh(chat)
+        else:
+            # Update default title on first user message
+            if (chat.title or "") == "New Chat":
+                chat.title = user_input[:48] + ("…" if len(user_input) > 48 else "")
 
         # Store user and assistant messages
         s.add(Message(chat_id=chat.id, role="user", content=user_input))
