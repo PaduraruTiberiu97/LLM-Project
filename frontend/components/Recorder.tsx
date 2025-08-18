@@ -75,10 +75,10 @@ export default function Recorder({
             : "text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
         }`}
       >
-        <Mic className="h-5 w-5" />
+        <Mic className="h-5 w-5" aria-hidden="true" />
       </button>
       {recording && (
-        <div className="ml-2 recording-bars">
+        <div className="ml-2 recording-bars" aria-hidden="true">
           {Array.from({ length: 5 }).map((_, i) => (
             <span key={i} />
           ))}

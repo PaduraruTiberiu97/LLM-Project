@@ -19,7 +19,7 @@ function Avatar({ role }: { role: "user" | "assistant" }) {
         role === "user" ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900" : "bg-gray-600 text-white"
       )}
     >
-      <Icon className="h-5 w-5" />
+      <Icon className="h-5 w-5" aria-hidden="true" />
     </div>
   );
 }
@@ -73,7 +73,12 @@ export default function MessageBubble({ msg, onCopy, onImageClick, onSpeak, spea
                   title="Copy"
                   aria-label="Copy message"
                 >
-                  {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                  {copied ? (
+                    <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                  ) : (
+                    <Copy className="h-3.5 w-3.5" aria-hidden="true" />
+                  )}
+
                 </button>
                 {onSpeak && (
                   <button
@@ -82,7 +87,12 @@ export default function MessageBubble({ msg, onCopy, onImageClick, onSpeak, spea
                     title="Read aloud"
                     aria-label="Read aloud"
                   >
-                    {speaking ? <Square className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
+                    {speaking ? (
+                      <Square className="h-3.5 w-3.5" aria-hidden="true" />
+                    ) : (
+                      <Volume2 className="h-3.5 w-3.5" aria-hidden="true" />
+                    )}
+
                   </button>
                 )}
               </div>

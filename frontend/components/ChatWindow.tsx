@@ -81,7 +81,7 @@ export default function ChatWindow({
 
   async function speak(text: string, idx: number) {
     const audio = audioRef.current;
-
+    
     // If this message is already playing, stop it
     if (speakingIdx === idx && audio) {
       audio.pause();
@@ -204,7 +204,13 @@ export default function ChatWindow({
 
   return (
     <div className="flex h-full flex-col">
-      <div ref={listRef} className="flex-1 overflow-y-auto px-4">
+      <div
+        ref={listRef}
+        className="flex-1 overflow-y-auto px-4"
+        role="log"
+        aria-label="Chat messages"
+        aria-live="polite"
+      >
         {msgs.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-6 text-center">
             <h1 className="text-2xl font-semibold">What can I help you with?</h1>
@@ -222,7 +228,7 @@ export default function ChatWindow({
               />
             ))}
             {status && (
-              <div className="flex items-center gap-2 text-gray-500">
+              <div className="flex items-center gap-2 text-gray-500" role="status">
                 <TypingDots />
                 <span className="text-sm">
                   {status === "generating" ? "Generating image…" : "Assistant is thinking…"}
@@ -246,6 +252,7 @@ export default function ChatWindow({
             placeholder={recording ? "" : "Ask anything"}
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            aria-label="Message input"
           />
           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
             <button
@@ -254,7 +261,7 @@ export default function ChatWindow({
               className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
               aria-label="Generate image"
             >
-              <ImagePlus className="h-5 w-5" />
+              <ImagePlus className="h-5 w-5" aria-hidden="true" />
             </button>
             <Recorder
               onText={(t) => setInput(t)}
@@ -264,8 +271,14 @@ export default function ChatWindow({
               type="submit"
               disabled={sending}
               className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+              aria-label="Send message"
             >
-              {sending ? <Spinner className="h-5 w-5" /> : <Send className="h-5 w-5" />}
+              {sending ? (
+                <Spinner className="h-5 w-5" />
+              ) : (
+                <Send className="h-5 w-5" aria-hidden="true" />
+              )}
+
             </button>
           </div>
         </div>
