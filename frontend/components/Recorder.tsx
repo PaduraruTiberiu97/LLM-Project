@@ -64,7 +64,7 @@ export default function Recorder({
   }
 
   return (
-    <div className={`flex items-center ${className || ""}`} aria-live="polite">
+    <div className={`flex items-center ${className || ""}`}>
       <button
         type="button"
         onClick={() => (recording ? stop() : start())}
@@ -78,14 +78,11 @@ export default function Recorder({
         <Mic className="h-5 w-5" aria-hidden="true" />
       </button>
       {recording && (
-        <>
-          <div className="ml-2 recording-bars" aria-hidden="true">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <span key={i} />
-            ))}
-          </div>
-          <span className="sr-only">Recording</span>
-        </>
+        <div className="ml-2 recording-bars" aria-hidden="true">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <span key={i} />
+          ))}
+        </div>
       )}
     </div>
   );

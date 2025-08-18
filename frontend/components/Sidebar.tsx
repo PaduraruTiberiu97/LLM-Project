@@ -1,7 +1,6 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { usePathname } from "next/navigation";
 import { Plus, Search, BookOpen, MessageSquare, Trash2 } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import ImageLightbox from "./ImageLightbox";
@@ -19,7 +18,7 @@ export default function Sidebar() {
   const base = useApiBase();
   const [q, setQ] = useState("");
   const [chats, setChats] = useState<ChatItem[]>([]);
-  const pathname = usePathname();
+  const [genImg, setGenImg] = useState<string | null>(null);
 
   async function load() {
     try {
@@ -51,7 +50,6 @@ export default function Sidebar() {
     <aside
       className="hidden w-60 shrink-0 md:flex md:flex-col h-screen border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden"
       aria-label="Chat sidebar"
-      role="navigation"
     >
       <div className="p-3">
         <button
@@ -78,7 +76,6 @@ export default function Sidebar() {
         <Link
           href="/library"
           className="flex items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
-          aria-current={pathname === "/library" ? "page" : undefined}
         >
           <BookOpen className="h-4 w-4" aria-hidden="true" /> Library
         </Link>
@@ -89,11 +86,7 @@ export default function Sidebar() {
             key={c.id}
             className="group flex items-center rounded-md px-2 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
           >
-            <Link
-              href={`/chat/${c.id}`}
-              className="flex flex-1 min-w-0 items-center gap-2"
-              aria-current={pathname === `/chat/${c.id}` ? "page" : undefined}
-            >
+            <Link href={`/chat/${c.id}`} className="flex flex-1 min-w-0 items-center gap-2">
               <MessageSquare className="h-4 w-4 shrink-0" aria-hidden="true" />
               <span className="truncate">{c.title}</span>
             </Link>
