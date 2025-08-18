@@ -6,8 +6,11 @@ import { Plus, Search, BookOpen, MessageSquare, Trash2 } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import { getUserId } from "@/lib/user";
 
-function useApiBase(){
-  return useMemo(() => process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000", []);
+function useApiBase() {
+  return useMemo(
+    () => process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000",
+    []
+  );
 }
 
 type ChatItem = { id: number; title: string };

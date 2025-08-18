@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import os
+from datetime import datetime
+from typing import Optional
+
 from fastapi import APIRouter, Query
 from openai import OpenAI
 import os
@@ -10,9 +14,7 @@ from sqlmodel import select
 from ..db import get_session
 from ..models import ImageAsset, Chat
 
-
 router = APIRouter(prefix="", tags=["image"])
-
 
 @router.get("/image")
 def gen_image(

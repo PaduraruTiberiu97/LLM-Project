@@ -34,6 +34,7 @@ export default function MessageBubble({ msg, onCopy, onImageClick, onSpeak, spea
   const [copied, setCopied] = React.useState(false);
   const raw = msg.content ?? "";
   const hasText = raw.replace(/\s+/g, "").length > 0;
+  
   async function doCopy() {
     if (!onCopy) return;
     onCopy(raw);
@@ -50,8 +51,14 @@ export default function MessageBubble({ msg, onCopy, onImageClick, onSpeak, spea
   );
 
   return (
-    <div className={cn("flex gap-3", msg.role === "user" ? "justify-end" : "justify-start")}>
+    <div
+      className={cn(
+        "flex gap-3",
+        msg.role === "user" ? "justify-end" : "justify-start"
+      )}
+    >
       {msg.role === "assistant" && <Avatar role="assistant" />}
+
       <div className="max-w-[80%] space-y-2">
         {hasText && (
           <div className={bubbleClasses}>
@@ -71,6 +78,7 @@ export default function MessageBubble({ msg, onCopy, onImageClick, onSpeak, spea
                   ) : (
                     <Copy className="h-3.5 w-3.5" aria-hidden="true" />
                   )}
+
                 </button>
                 {onSpeak && (
                   <button

@@ -11,7 +11,6 @@ export default function LibraryPage(){
   const userId = useMemo(() => getUserId(), []);
   const [imgs, setImgs] = useState<Img[] | null>(null);
   const [open, setOpen] = useState<string|null>(null);
-
   useEffect(()=>{ fetch(`${base}/images?user_id=${userId}`).then(r=>r.json()).then(setImgs).catch(()=>setImgs([])); },[base,userId]);
 
   return (

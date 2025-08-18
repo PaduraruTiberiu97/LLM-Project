@@ -9,7 +9,10 @@ import Recorder from "./Recorder";
 import { getUserId } from "@/lib/user";
 
 function useApiBase() {
-  return useMemo(() => process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000", []);
+  return useMemo(
+    () => process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000",
+    []
+  );
 }
 
 function stripMarkdown(s: string) {
@@ -80,6 +83,69 @@ export default function ChatWindow({
 
   async function speak(text: string, idx: number) {
     const audio = audioRef.current;
+    // If this message is already playing, stop it
+    if (speakingIdx === idx && audio) {
+      audio.pause();
+      audio.currentTime = 0;
+      setSpeakingIdx(null);
+      return;
+    }
+
+    // Stop any existing playback
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
+
+    setSpeakingIdx(idx);
+    try {
+      const tts = await fetch(
+        base + "/tts?text=" + encodeURIComponent(stripMarkdown(text))
+      );
+      if (tts.ok) {
+        const blob = await tts.blob();
+        const url = URL.createObjectURL(blob);
+        setAudioUrl(url);
+        setTimeout(() => {
+          const a = audioRef.current;
+          if (a && speakingIdxRef.current === idx) {
+            a.play();
+            a.onended = () => setSpeakingIdx(null);
+          }
+        }, 100);
+      } else {
+        setSpeakingIdx(null);
+      }
+    } catch {
+      setSpeakingIdx(null);
+    }
+  }
+
+  useEffect(() => {
+    if (seedMessages) {
+      setMsgs(
+        seedMessages
+          .map((m) => ({
+            role: m.role,
+            content: m.content || "",
+            imageB64: m.imageB64 || (m as any).image_b64,
+          }))
+          .filter((m) => m.content.trim() !== "" || m.imageB64)
+      );
+    }
+  }, [seedMessages]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "auto" });
+  }, [msgs, chatId]);
+
+  useEffect(() => {
+    speakingIdxRef.current = speakingIdx;
+  }, [speakingIdx]);
+
+  async function speak(text: string, idx: number) {
+    const audio = audioRef.current;
+    
     // If this message is already playing, stop it
     if (speakingIdx === idx && audio) {
       audio.pause();

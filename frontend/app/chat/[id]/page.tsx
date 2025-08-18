@@ -27,5 +27,13 @@ export default function ChatById({ params }: { params: { id: string } }){
     );
   }
 
+  if (seed === null) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <Spinner className="h-8 w-8" />
+      </div>
+    );
+  }
+
   return <ChatWindow chatId={chatId} seedMessages={seed || undefined}/>;
 }
