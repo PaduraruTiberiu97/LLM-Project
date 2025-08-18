@@ -3,9 +3,13 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Plus, Search, BookOpen, MessageSquare, Trash2 } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
+import ImageLightbox from "./ImageLightbox";
 
-function useApiBase(){
-  return useMemo(() => process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000", []);
+function useApiBase() {
+  return useMemo(
+    () => process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000",
+    []
+  );
 }
 
 type ChatItem = { id: number; title: string };
@@ -14,6 +18,7 @@ export default function Sidebar() {
   const base = useApiBase();
   const [q, setQ] = useState("");
   const [chats, setChats] = useState<ChatItem[]>([]);
+  const [genImg, setGenImg] = useState<string | null>(null);
 
   async function load() {
     try {
@@ -68,6 +73,7 @@ export default function Sidebar() {
           <BookOpen className="h-4 w-4" /> Library
         </Link>
       </div>
+      
       <nav className="mt-2 flex-1 px-3 space-y-1 overflow-y-auto">
         {filtered.map((c) => (
           <div
