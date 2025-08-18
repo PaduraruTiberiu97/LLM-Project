@@ -5,9 +5,9 @@ import Sidebar from "@/components/Sidebar";
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+      <body className="h-screen overflow-hidden bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-          <div className="min-h-screen flex">
+          <div className="flex h-full">
             <Sidebar />
             <main className="flex-1 overflow-hidden">{children}</main>
           </div>

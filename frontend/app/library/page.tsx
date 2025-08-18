@@ -13,7 +13,7 @@ export default function LibraryPage(){
   useEffect(()=>{ fetch(base+"/images").then(r=>r.json()).then(setImgs).catch(()=>setImgs([])); },[base]);
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="p-6 space-y-4 h-full overflow-y-auto">
       <h2 className="text-xl font-semibold">Library</h2>
       {imgs === null ? (
         <div className="flex items-center justify-center py-10">
