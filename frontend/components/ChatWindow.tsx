@@ -6,6 +6,7 @@ import Spinner from "./Spinner";
 import ImageLightbox from "./ImageLightbox";
 import { Send, ImagePlus } from "lucide-react";
 import Recorder from "./Recorder";
+import { getUserId } from "@/lib/user";
 
 function useApiBase() {
   return useMemo(
@@ -56,6 +57,69 @@ export default function ChatWindow({
   const listRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const base = useApiBase();
+  const userId = useMemo(() => getUserId(), []);
+
+  useEffect(() => {
+    if (seedMessages) {
+      setMsgs(
+        seedMessages
+          .map((m) => ({
+            role: m.role,
+            content: m.content || "",
+            imageB64: m.imageB64 || (m as any).image_b64,
+          }))
+          .filter((m) => m.content.trim() !== "" || m.imageB64)
+      );
+    }
+  }, [seedMessages]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "auto" });
+  }, [msgs, chatId]);
+
+  useEffect(() => {
+    speakingIdxRef.current = speakingIdx;
+  }, [speakingIdx]);
+
+  async function speak(text: string, idx: number) {
+    const audio = audioRef.current;
+    // If this message is already playing, stop it
+    if (speakingIdx === idx && audio) {
+      audio.pause();
+      audio.currentTime = 0;
+      setSpeakingIdx(null);
+      return;
+    }
+
+    // Stop any existing playback
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
+
+    setSpeakingIdx(idx);
+    try {
+      const tts = await fetch(
+        base + "/tts?text=" + encodeURIComponent(stripMarkdown(text))
+      );
+      if (tts.ok) {
+        const blob = await tts.blob();
+        const url = URL.createObjectURL(blob);
+        setAudioUrl(url);
+        setTimeout(() => {
+          const a = audioRef.current;
+          if (a && speakingIdxRef.current === idx) {
+            a.play();
+            a.onended = () => setSpeakingIdx(null);
+          }
+        }, 100);
+      } else {
+        setSpeakingIdx(null);
+      }
+    } catch {
+      setSpeakingIdx(null);
+    }
+  }
 
   useEffect(() => {
     if (seedMessages) {
@@ -129,7 +193,7 @@ export default function ChatWindow({
     setMsgs((m) => [...m, { role: "user", content: message }]);
 
     try {
-      const res = await fetch(base + "/chat", {
+      const res = await fetch(base + `/chat?user_id=${userId}`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ message, chat_id: chatId }),
@@ -167,7 +231,7 @@ export default function ChatWindow({
     setStatus("generating");
     try {
       const res = await fetch(
-        `${base}/image?prompt=${encodeURIComponent(lastAssistant.content)}&chat_id=${chatId ?? ""}`
+        `${base}/image?prompt=${encodeURIComponent(lastAssistant.content)}&chat_id=${chatId ?? ""}&user_id=${userId}`
       );
       const data = await res.json();
       if (!chatId && data?.chat_id) {
@@ -278,7 +342,6 @@ export default function ChatWindow({
               ) : (
                 <Send className="h-5 w-5" aria-hidden="true" />
               )}
-
             </button>
           </div>
         </div>

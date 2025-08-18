@@ -1,9 +1,10 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Plus, Search, BookOpen, MessageSquare, Trash2 } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
-import ImageLightbox from "./ImageLightbox";
+import { getUserId } from "@/lib/user";
 
 function useApiBase() {
   return useMemo(
@@ -18,11 +19,12 @@ export default function Sidebar() {
   const base = useApiBase();
   const [q, setQ] = useState("");
   const [chats, setChats] = useState<ChatItem[]>([]);
-  const [genImg, setGenImg] = useState<string | null>(null);
+  const pathname = usePathname();
+  const userId = useMemo(() => getUserId(), []);
 
   async function load() {
     try {
-      const res = await fetch(base + "/chats");
+      const res = await fetch(base + `/chats?user_id=${userId}`);
       const data = await res.json().catch(() => []);
       setChats(Array.isArray(data) ? data : []);
     } catch {
@@ -34,10 +36,10 @@ export default function Sidebar() {
     load().catch(() => {});
     window.addEventListener("chats-changed", load);
     return () => window.removeEventListener("chats-changed", load);
-  }, [base]);
+  }, [base, userId]);
 
   async function newChat() {
-    const res = await fetch(base + "/chats", { method: "POST" });
+    const res = await fetch(base + `/chats?user_id=${userId}`, { method: "POST" });
     const data = await res.json();
     window.location.href = "/chat/" + data.id;
   }
@@ -50,6 +52,7 @@ export default function Sidebar() {
     <aside
       className="hidden w-60 shrink-0 md:flex md:flex-col h-screen border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden"
       aria-label="Chat sidebar"
+      role="navigation"
     >
       <div className="p-3">
         <button
@@ -76,6 +79,7 @@ export default function Sidebar() {
         <Link
           href="/library"
           className="flex items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
+          aria-current={pathname === "/library" ? "page" : undefined}
         >
           <BookOpen className="h-4 w-4" aria-hidden="true" /> Library
         </Link>
@@ -86,7 +90,11 @@ export default function Sidebar() {
             key={c.id}
             className="group flex items-center rounded-md px-2 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
           >
-            <Link href={`/chat/${c.id}`} className="flex flex-1 min-w-0 items-center gap-2">
+            <Link
+              href={`/chat/${c.id}`}
+              className="flex flex-1 min-w-0 items-center gap-2"
+              aria-current={pathname === `/chat/${c.id}` ? "page" : undefined}
+            >
               <MessageSquare className="h-4 w-4 shrink-0" aria-hidden="true" />
               <span className="truncate">{c.title}</span>
             </Link>
@@ -94,7 +102,7 @@ export default function Sidebar() {
               onClick={async (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                await fetch(base + `/chats/${c.id}`, { method: "DELETE" });
+                await fetch(base + `/chats/${c.id}?user_id=${userId}`, { method: "DELETE" });
                 window.dispatchEvent(new Event("chats-changed"));
                 if (window.location.pathname === `/chat/${c.id}`) {
                   window.location.href = "/";

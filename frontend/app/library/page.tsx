@@ -2,15 +2,16 @@
 import { useEffect, useMemo, useState } from "react";
 import ImageLightbox from "@/components/ImageLightbox";
 import Spinner from "@/components/Spinner";
+import { getUserId } from "@/lib/user";
 
 type Img = { id:number; chat_id:number|null; title?:string|null; b64:string };
 
 export default function LibraryPage(){
   const base = useMemo(()=>process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000",[]);
+  const userId = useMemo(() => getUserId(), []);
   const [imgs, setImgs] = useState<Img[] | null>(null);
   const [open, setOpen] = useState<string|null>(null);
-
-  useEffect(()=>{ fetch(base+"/images").then(r=>r.json()).then(setImgs).catch(()=>setImgs([])); },[base]);
+  useEffect(()=>{ fetch(`${base}/images?user_id=${userId}`).then(r=>r.json()).then(setImgs).catch(()=>setImgs([])); },[base,userId]);
 
   return (
     <div className="p-6 space-y-4 h-full overflow-y-auto">

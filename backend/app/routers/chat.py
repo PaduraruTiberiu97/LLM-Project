@@ -7,6 +7,7 @@ from datetime import datetime
 from openai import OpenAI
 import os, json
 
+from sqlmodel import select
 from ..services.rag import retrieve
 from ..services.tools import get_summary_by_title
 from ..services.moderation import is_blocked
@@ -25,7 +26,7 @@ class ChatIn(BaseModel):
 
 
 @router.post("/chat")
-def chat(body: ChatIn):
+def chat(body: ChatIn, user_id: str):
     user_input = (body.message or "").strip()
     if not user_input:
         return {"reply": "Please enter a message.", "blocked": False}
@@ -114,11 +115,15 @@ def chat(body: ChatIn):
     # Persist conversation: create chat if needed, then store messages
     chat_id = body.chat_id
     with get_session() as s:
-        chat: Optional[Chat] = s.get(Chat, chat_id) if chat_id else None
+        chat: Optional[Chat] = (
+            s.exec(select(Chat).where(Chat.id == chat_id, Chat.user_id == user_id)).first()
+            if chat_id
+            else None
+        )
         if chat is None:
             # Create a new chat with a short title from the user's input
             title = user_input[:48] + ("…" if len(user_input) > 48 else "")
-            chat = Chat(title=title)
+            chat = Chat(user_id=user_id, title=title)
             s.add(chat)
             s.commit()
             s.refresh(chat)
