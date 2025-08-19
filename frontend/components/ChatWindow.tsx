@@ -121,69 +121,6 @@ export default function ChatWindow({
     }
   }
 
-  useEffect(() => {
-    if (seedMessages) {
-      setMsgs(
-        seedMessages
-          .map((m) => ({
-            role: m.role,
-            content: m.content || "",
-            imageB64: m.imageB64 || (m as any).image_b64,
-          }))
-          .filter((m) => m.content.trim() !== "" || m.imageB64)
-      );
-    }
-  }, [seedMessages]);
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "auto" });
-  }, [msgs, chatId]);
-
-  useEffect(() => {
-    speakingIdxRef.current = speakingIdx;
-  }, [speakingIdx]);
-
-  async function speak(text: string, idx: number) {
-    const audio = audioRef.current;
-    
-    // If this message is already playing, stop it
-    if (speakingIdx === idx && audio) {
-      audio.pause();
-      audio.currentTime = 0;
-      setSpeakingIdx(null);
-      return;
-    }
-
-    // Stop any existing playback
-    if (audio) {
-      audio.pause();
-      audio.currentTime = 0;
-    }
-
-    setSpeakingIdx(idx);
-    try {
-      const tts = await fetch(
-        base + "/tts?text=" + encodeURIComponent(stripMarkdown(text))
-      );
-      if (tts.ok) {
-        const blob = await tts.blob();
-        const url = URL.createObjectURL(blob);
-        setAudioUrl(url);
-        setTimeout(() => {
-          const a = audioRef.current;
-          if (a && speakingIdxRef.current === idx) {
-            a.play();
-            a.onended = () => setSpeakingIdx(null);
-          }
-        }, 100);
-      } else {
-        setSpeakingIdx(null);
-      }
-    } catch {
-      setSpeakingIdx(null);
-    }
-  }
-
   async function send(text?: string) {
     const message = (text ?? input).trim();
     if (!message || sending) return;
