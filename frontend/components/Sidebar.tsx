@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Plus, Search, BookOpen, MessageSquare, Trash2 } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import { getUserId } from "@/lib/user";
@@ -21,6 +21,7 @@ export default function Sidebar() {
   const [chats, setChats] = useState<ChatItem[]>([]);
   const pathname = usePathname();
   const userId = useMemo(() => getUserId(), []);
+  const router = useRouter();
 
   async function load() {
     try {
@@ -41,7 +42,8 @@ export default function Sidebar() {
   async function newChat() {
     const res = await fetch(base + `/chats?user_id=${userId}`, { method: "POST" });
     const data = await res.json();
-    window.location.href = "/chat/" + data.id;
+    window.dispatchEvent(new Event("chats-changed"));
+    router.push("/chat/" + data.id);
   }
 
   const filtered = Array.isArray(chats)
@@ -104,8 +106,8 @@ export default function Sidebar() {
                 e.stopPropagation();
                 await fetch(base + `/chats/${c.id}?user_id=${userId}`, { method: "DELETE" });
                 window.dispatchEvent(new Event("chats-changed"));
-                if (window.location.pathname === `/chat/${c.id}`) {
-                  window.location.href = "/";
+                if (pathname === `/chat/${c.id}`) {
+                  router.push("/");
                 }
               }}
               className="ml-2 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-600"

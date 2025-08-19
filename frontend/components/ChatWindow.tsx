@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import MessageBubble, { ChatMsg } from "./MessageBubble";
 import TypingDots from "./TypingDots";
 import Spinner from "./Spinner";
@@ -58,6 +59,7 @@ export default function ChatWindow({
   const bottomRef = useRef<HTMLDivElement>(null);
   const base = useApiBase();
   const userId = useMemo(() => getUserId(), []);
+  const router = useRouter();
 
   useEffect(() => {
     if (seedMessages) {
@@ -202,7 +204,8 @@ export default function ChatWindow({
 
       // If we didn't have a chat yet, jump to the newly created chat route
       if (!chatId && data?.chat_id) {
-        window.location.href = "/chat/" + data.chat_id;
+        window.dispatchEvent(new Event("chats-changed"));
+        router.push("/chat/" + data.chat_id);
         return;
       }
 
@@ -235,7 +238,8 @@ export default function ChatWindow({
       );
       const data = await res.json();
       if (!chatId && data?.chat_id) {
-        window.location.href = "/chat/" + data.chat_id;
+        window.dispatchEvent(new Event("chats-changed"));
+        router.push("/chat/" + data.chat_id);
         return;
       }
       if (data?.image_b64) {
