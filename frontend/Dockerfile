@@ -10,6 +10,7 @@ COPY postcss.config.js ./
 COPY tailwind.config.ts ./
 COPY app ./app
 COPY components ./components
+COPY lib ./lib
 
 RUN pnpm install
 RUN pnpm build
