@@ -1,8 +1,6 @@
-from __future__ import annotations
-
 from fastapi import APIRouter
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 from openai import OpenAI
 import os, json
@@ -35,10 +33,32 @@ def chat(body: ChatIn, user_id: str):
     if is_blocked(user_input):
         return {"reply": "Sorry, I can't help with that.", "blocked": True}
 
-    # Decide whether the user is asking about books
+    # Retrieve recent conversation for context (up to 20 messages)
+    history: List[Message] = []
+    if body.chat_id:
+        with get_session() as s:
+            chat = s.exec(
+                select(Chat).where(Chat.id == body.chat_id, Chat.user_id == user_id)
+            ).first()
+            if chat:
+                history = s.exec(
+                    select(Message)
+                    .where(Message.chat_id == chat.id)
+                    .order_by(Message.id.desc())
+                    .limit(20)
+                ).all()
+                history.reverse()
+
+    # Decide whether the user is asking about books (considering prior turns)
     keywords = ("book", "novel", "read", "recommend", "author", "literature", "story", "title")
     is_book_request = any(k in user_input.lower() for k in keywords)
+    if not is_book_request:
+        for msg in reversed(history):
+            if any(k in msg.content.lower() for k in keywords):
+                is_book_request = True
+                break
 
+    messages = []
     final_reply: str
 
     if not is_book_request:
@@ -47,10 +67,9 @@ def chat(body: ChatIn, user_id: str):
             "You are Smart Librarian. Engage in brief, friendly conversation. "
             "Keep replies light, and if the user asks about books you can help with recommendations."
         )
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_input},
-        ]
+        messages.append({"role": "system", "content": system_prompt})
+        messages.extend({"role": m.role, "content": m.content} for m in history)
+        messages.append({"role": "user", "content": user_input})
         reply = oai.chat.completions.create(model=CHAT_MODEL, messages=messages)
         final_reply = reply.choices[0].message.content or ""
     else:
@@ -59,9 +78,10 @@ def chat(body: ChatIn, user_id: str):
 
         # System prompt and tool schema for recommendations
         system_prompt = (
-            "You are Smart Librarian. Use the provided context from a vector search over book blurbs "
-            "to recommend exactly one book. Respond with: Title + 2–3 sentences why it fits. "
-            "If you can infer the exact title, call the tool get_summary_by_title(title) to append the full summary at the end."
+            "You are Smart Librarian, a friendly conversational assistant. Use the provided context from "
+            "a vector search over book blurbs to recommend a single book in a natural tone. "
+            "You may briefly relate to the user's comments before suggesting the book. If you can infer the exact "
+            "title, call the tool get_summary_by_title(title) to append the full summary at the end."
         )
         tools = [{
             "type": "function",
@@ -78,10 +98,9 @@ def chat(body: ChatIn, user_id: str):
 
         user_input_with_context = f"User question: {user_input}\n\nContext:\n{context}"
 
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_input_with_context},
-        ]
+        messages.append({"role": "system", "content": system_prompt})
+        messages.extend({"role": m.role, "content": m.content} for m in history)
+        messages.append({"role": "user", "content": user_input_with_context})
 
         # First model call (may decide to call tool)
         first = oai.chat.completions.create(model=CHAT_MODEL, messages=messages, tools=tools)
