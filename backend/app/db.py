@@ -1,5 +1,7 @@
-from sqlmodel import SQLModel, create_engine, Session
 import os
+
+from sqlalchemy import inspect
+from sqlmodel import SQLModel, create_engine, Session
 
 DB_URL = os.getenv("DB_URL", "sqlite:///data/app.db")
 # For SQLite, need check_same_thread=False when used in threaded servers
@@ -10,6 +12,14 @@ def init_db():
     if DB_URL.startswith("sqlite"):
         os.makedirs("data", exist_ok=True)
     SQLModel.metadata.create_all(engine)
+
+    # Simple migration: ensure chat.user_id exists for older databases
+    with engine.begin() as conn:
+        inspector = inspect(conn)
+        if "chat" in inspector.get_table_names():
+            cols = {col["name"] for col in inspector.get_columns("chat")}
+            if "user_id" not in cols:
+                conn.exec_driver_sql("ALTER TABLE chat ADD COLUMN user_id TEXT DEFAULT ''")
 
 def get_session() -> Session:
     return Session(engine)
