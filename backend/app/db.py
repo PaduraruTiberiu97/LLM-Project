@@ -33,7 +33,6 @@ def init_db():
         ensure("chat", "user_id")
         ensure("imageasset", "user_id")
 
-
 def get_session() -> Session:
     init_db()
     return Session(engine)
