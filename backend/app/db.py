@@ -10,38 +10,28 @@ engine = create_engine(
     connect_args={"check_same_thread": False} if DB_URL.startswith("sqlite") else {},
 )
 
-_initialized = False
-
 def init_db():
-    global _initialized
-    if _initialized:
-        return
-
-    # Ensure the data directory exists for sqlite
+    """Create tables and backfill missing columns on older databases."""
     if DB_URL.startswith("sqlite"):
         os.makedirs("data", exist_ok=True)
+
     SQLModel.metadata.create_all(engine)
 
-    # Simple migrations for older databases
     with engine.begin() as conn:
         inspector = inspect(conn)
         tables = set(inspector.get_table_names())
 
-        if "chat" in tables:
-            cols = {col["name"] for col in inspector.get_columns("chat")}
-            if "user_id" not in cols:
+        def ensure(table: str, column: str):
+            if table not in tables:
+                return
+            cols = {c["name"] for c in inspector.get_columns(table)}
+            if column not in cols:
                 conn.exec_driver_sql(
-                    "ALTER TABLE chat ADD COLUMN user_id TEXT DEFAULT ''"
+                    f"ALTER TABLE {table} ADD COLUMN {column} TEXT DEFAULT ''"
                 )
 
-        if "imageasset" in tables:
-            cols = {col["name"] for col in inspector.get_columns("imageasset")}
-            if "user_id" not in cols:
-                conn.exec_driver_sql(
-                    "ALTER TABLE imageasset ADD COLUMN user_id TEXT DEFAULT ''"
-                )
-
-    _initialized = True
+        ensure("chat", "user_id")
+        ensure("imageasset", "user_id")
 
 def get_session() -> Session:
     init_db()
