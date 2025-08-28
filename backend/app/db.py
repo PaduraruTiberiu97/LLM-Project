@@ -22,14 +22,23 @@ def init_db():
         os.makedirs("data", exist_ok=True)
     SQLModel.metadata.create_all(engine)
 
-    # Simple migration: ensure chat.user_id exists for older databases
+    # Simple migrations for older databases
     with engine.begin() as conn:
         inspector = inspect(conn)
-        if "chat" in inspector.get_table_names():
+        tables = set(inspector.get_table_names())
+
+        if "chat" in tables:
             cols = {col["name"] for col in inspector.get_columns("chat")}
             if "user_id" not in cols:
                 conn.exec_driver_sql(
                     "ALTER TABLE chat ADD COLUMN user_id TEXT DEFAULT ''"
+                )
+
+        if "imageasset" in tables:
+            cols = {col["name"] for col in inspector.get_columns("imageasset")}
+            if "user_id" not in cols:
+                conn.exec_driver_sql(
+                    "ALTER TABLE imageasset ADD COLUMN user_id TEXT DEFAULT ''"
                 )
 
     _initialized = True
